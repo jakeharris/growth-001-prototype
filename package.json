@@ -1,0 +1,27 @@
+{
+  "name": "growth-001-prototype",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "serve": "watch 'npx tsc -p src' & node app.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jakeharris/growth-001-prototype.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jakeharris/growth-001-prototype/issues"
+  },
+  "homepage": "https://github.com/jakeharris/growth-001-prototype#readme",
+  "dependencies": {
+    "@types/node": "^17.0.5",
+    "express": "^4.17.2",
+    "phaser": "^3.55.2",
+    "typescript": "^4.5.4",
+    "watch": "^1.0.2"
+  }
+}
