@@ -1,20 +1,14 @@
+import { InitialScene } from "./initial-scene";
+
+const initialScene = new InitialScene({
+  key: "initialScene",
+});
+
 const config = {
   type: Phaser.AUTO,
   width: 800,
   height: 600,
-  scene: {
-    preload: preload,
-    create: create,
-    update: update,
-  },
+  scene: initialScene,
 };
 
 const game = new Phaser.Game(config);
-
-function preload() {}
-
-function create() {
-  console.log("we creating");
-}
-
-function update() {}
