@@ -3,10 +3,10 @@ import {
   createSlice,
   EntityState,
 } from "@reduxjs/toolkit";
-import { Tile } from "../../models/tile";
+import { Cursor, Tile } from "../../models";
 
-interface State extends EntityState<Tile> {
-  verticalOffset: number;
+export interface State extends EntityState<Tile> {
+  cursorPosition: Cursor;
 }
 
 const adapter = createEntityAdapter({
@@ -15,7 +15,7 @@ const adapter = createEntityAdapter({
 
 const initialState: State = {
   ...adapter.getInitialState(),
-  verticalOffset: 20,
+  cursorPosition: { x: 0, y: 0 },
 };
 
 export const slice = createSlice({
@@ -33,4 +33,5 @@ export const slice = createSlice({
 
 export const { actions, reducer } = slice;
 
-export const selectVerticalOffset = (state: State) => state.verticalOffset;
+export const selectCursorPosition = (state: State) => state.cursorPosition;
+export const { selectIds, selectEntities, selectAll } = adapter.getSelectors();
