@@ -75,9 +75,6 @@ export class InitialScene extends Phaser.Scene {
   }
 
   generateMap() {
-    const tileXOffset = this.tileWidth - this.tileWidth / 2;
-    const tileYOffset = this.tileHeight - this.tileHeight / 2;
-
     const grid = this.add.group();
     const tiles: Tile[] = [];
 
@@ -90,8 +87,8 @@ export class InitialScene extends Phaser.Scene {
         const traversable = random !== 2;
 
         const rect = this.add.rectangle(
-          x * tileXOffset,
-          y * tileYOffset,
+          x * this.tileWidth,
+          y * this.tileHeight,
           this.tileWidth,
           this.tileHeight,
           color
