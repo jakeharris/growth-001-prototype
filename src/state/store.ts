@@ -1,14 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { createEpicMiddleware } from "redux-observable";
 import { rootEpic } from "./epics";
-import { initialSceneState } from "./reducers";
+import { reducers } from "./reducers";
 
 const epicMiddleware = createEpicMiddleware();
 
 export const store = configureStore({
-  reducer: {
-    initialScene: initialSceneState.reducer,
-  },
+  reducer: reducers,
   middleware: (getDefaultMiddleware) => [
     ...getDefaultMiddleware({ thunk: false }),
     epicMiddleware,
