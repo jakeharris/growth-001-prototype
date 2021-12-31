@@ -57,7 +57,7 @@ export class InitialScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: cursor,
-      alpha: 0.2,
+      alpha: 0.7,
       yoyo: true,
       repeat: -1,
       ease: "Sine.easeInOut",
