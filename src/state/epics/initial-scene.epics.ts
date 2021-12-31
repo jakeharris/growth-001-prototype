@@ -5,7 +5,7 @@ import { ignoreElements } from "rxjs/operators";
 
 const addPreloadText = (action$: Observable<Action>) =>
   action$.pipe(
-    ofType("initialScene/preload"),
+    ofType("initialScene/update"),
     tap(() => console.log("InitialScene.preoad")),
     ignoreElements()
   );
