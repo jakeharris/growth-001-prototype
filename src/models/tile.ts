@@ -1,7 +1,7 @@
-export interface Tile {
+import { Positioned } from "./positioned";
+
+export interface Tile extends Positioned {
   name: string; // the name of the Phaser rect or image that this Tile represents
-  x: number; // x coordinate of the tile in grid positions, not pixels
-  y: number; // y coordinate of the tile in grid positions, not pixels
   traversable: boolean;
 }
 
