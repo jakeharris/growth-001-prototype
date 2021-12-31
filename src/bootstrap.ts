@@ -1,8 +1,7 @@
-import { InitialScene } from "./initial-scene";
+import { InitialScene } from "./scenes";
+import { store } from "./state/store";
 
-const initialScene = new InitialScene({
-  key: "initialScene",
-});
+const initialScene = new InitialScene(store);
 
 const config = {
   type: Phaser.AUTO,
