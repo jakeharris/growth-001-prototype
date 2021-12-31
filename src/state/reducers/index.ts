@@ -1,7 +1,7 @@
 import { createSelector } from "@reduxjs/toolkit";
 import * as initialSceneState from "./initial-scene.state";
 
-type State = {
+export type State = {
   initialScene: initialSceneState.State;
 };
 
