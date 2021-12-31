@@ -11,7 +11,7 @@ export const reducers = {
 
 export const selectInitialScene = (state: State) => state.initialScene;
 
-export const selectInitialSceneCursor = createSelector(
+export const selectInitialSceneCursorPosition = createSelector(
   selectInitialScene,
   initialSceneState.selectCursorPosition
 );

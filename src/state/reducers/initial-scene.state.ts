@@ -3,10 +3,10 @@ import {
   createSlice,
   EntityState,
 } from "@reduxjs/toolkit";
-import { Cursor, Tile } from "../../models";
+import { Positioned, Tile } from "../../models";
 
 export interface State extends EntityState<Tile> {
-  cursorPosition: Cursor;
+  cursorPosition: Positioned;
 }
 
 const adapter = createEntityAdapter({
@@ -28,7 +28,7 @@ export const slice = createSlice({
       const { x, y } = action.payload;
       return {
         ...state,
-        cursor: {
+        cursorPosition: {
           x: state.cursorPosition.x + x,
           y: state.cursorPosition.y + y,
         },

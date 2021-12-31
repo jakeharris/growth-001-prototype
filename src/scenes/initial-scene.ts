@@ -1,5 +1,5 @@
 import { Store } from "@reduxjs/toolkit";
-import { Cursor, haveSamePosition } from "../models";
+import { haveSamePosition, Positioned } from "../models";
 import { createTile, Tile } from "../models/tile";
 import {
   actions,
@@ -15,7 +15,7 @@ export class InitialScene extends Phaser.Scene {
 
   cursor: Phaser.GameObjects.Rectangle | null = null;
 
-  cursorPosition: Cursor = { x: 0, y: 0 };
+  cursorPosition: Positioned = { x: 0, y: 0 };
 
   constructor(private store: Store) {
     super({ key: "InitialScene" });
