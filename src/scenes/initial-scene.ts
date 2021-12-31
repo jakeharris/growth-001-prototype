@@ -53,6 +53,8 @@ export class InitialScene extends Phaser.Scene {
       0xdde024
     );
     cursor.setDepth(10);
+    cursor.setOrigin(0, 0);
+
     this.tweens.add({
       targets: cursor,
       alpha: 0.2,
@@ -95,6 +97,7 @@ export class InitialScene extends Phaser.Scene {
           color
         );
         rect.setName(`rect-${x}-${y}`);
+        rect.setOrigin(0, 0);
 
         grid.add(rect);
         tiles.push(createTile(rect.name, x, y, traversable));
