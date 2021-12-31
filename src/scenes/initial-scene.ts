@@ -8,8 +8,8 @@ export class InitialScene extends Phaser.Scene {
   timer = 0;
   width = 20; // in tiles
   height = 15; // in tiles
-  tileWidth = 64;
-  tileHeight = 64;
+  tileWidth = 32;
+  tileHeight = 32;
 
   cursor: Phaser.GameObjects.Rectangle | null = null;
 
