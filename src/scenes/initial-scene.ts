@@ -4,10 +4,10 @@ import { actions } from "../state/reducers/initial-scene.state";
 
 export class InitialScene extends Phaser.Scene {
   timer = 0;
-  width = 40; // in tiles
-  height = 30; // in tiles
-  tileWidth = 32;
-  tileHeight = 32;
+  width = 20; // in tiles
+  height = 15; // in tiles
+  tileWidth = 64;
+  tileHeight = 64;
 
   constructor(private store: Store) {
     super({ key: "InitialScene" });
