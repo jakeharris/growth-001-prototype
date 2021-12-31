@@ -22,12 +22,18 @@ export const slice = createSlice({
   name: "initialScene",
   initialState,
   reducers: {
-    preload: (state) => initialState,
-    update: (state) => ({
-      ...state,
-      verticalOffset: state.verticalOffset + 20,
-    }),
+    preload: () => initialState,
     createMap: adapter.setAll,
+    moveCursor: (state, action) => {
+      const { x, y } = action.payload;
+      return {
+        ...state,
+        cursor: {
+          x: state.cursorPosition.x + x,
+          y: state.cursorPosition.y + y,
+        },
+      };
+    },
   },
 });
 
