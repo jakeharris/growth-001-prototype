@@ -1,10 +1,8 @@
 import { Store } from "@reduxjs/toolkit";
 import { haveSamePosition, Positioned } from "../models";
 import { createTile, Tile } from "../models/tile";
-import {
-  actions,
-  selectCursorPosition as selectCursorPosition,
-} from "../state/reducers/initial-scene.state";
+import { selectInitialSceneCursorPosition, State } from "../state/reducers";
+import { actions } from "../state/reducers/initial-scene.state";
 
 export class InitialScene extends Phaser.Scene {
   timer = 0;
@@ -17,7 +15,7 @@ export class InitialScene extends Phaser.Scene {
 
   cursorPosition: Positioned = { x: 0, y: 0 };
 
-  constructor(private store: Store) {
+  constructor(private store: Store<State>) {
     super({ key: "InitialScene" });
   }
 
@@ -27,11 +25,15 @@ export class InitialScene extends Phaser.Scene {
 
   update(time: number, delta: number) {
     // handle changes to cursor position
-    const newCursorPosition = selectCursorPosition(this.store.getState());
-    if (this.cursor && this.cursorHasMoved()) {
+    const newCursorPosition = selectInitialSceneCursorPosition(
+      this.store.getState()
+    );
+    if (this.cursor && this.cursorHasMoved(newCursorPosition)) {
       this.cursorPosition = newCursorPosition;
-      this.cursor.x = newCursorPosition.x * this.tileWidth;
-      this.cursor.y = newCursorPosition.y * this.tileHeight;
+      this.cursor.setPosition(
+        newCursorPosition.x * this.tileWidth,
+        newCursorPosition.y * this.tileHeight
+      );
     }
   }
 
@@ -65,7 +67,9 @@ export class InitialScene extends Phaser.Scene {
       throw new Error("Cursor is null");
     }
 
-    this.cursorPosition = selectCursorPosition(this.store.getState());
+    this.cursorPosition = selectInitialSceneCursorPosition(
+      this.store.getState()
+    );
   }
 
   generateMap() {
@@ -116,8 +120,11 @@ export class InitialScene extends Phaser.Scene {
     );
   }
 
-  cursorHasMoved() {
-    const cursorPosition = selectCursorPosition(this.store.getState());
-    return !haveSamePosition(cursorPosition, this.cursorPosition);
+  cursorHasMoved(newCursorPosition: Positioned) {
+    return (
+      newCursorPosition &&
+      this.cursorPosition &&
+      !haveSamePosition(newCursorPosition, this.cursorPosition)
+    );
   }
 }
