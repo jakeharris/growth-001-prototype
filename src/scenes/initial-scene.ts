@@ -16,14 +16,7 @@ export class InitialScene extends Phaser.Scene {
     this.store.dispatch(actions.preload());
   }
 
-  update(time: number, delta: number) {
-    this.timer += delta;
-
-    if (this.timer > 1000) {
-      this.timer = 0;
-      this.store.dispatch(actions.update());
-    }
-  }
+  update(time: number, delta: number) {}
 
   create() {
     const tileXOffset = this.tileWidth - this.tileWidth / 2;
