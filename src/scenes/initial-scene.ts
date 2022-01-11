@@ -7,7 +7,7 @@ import { actions } from "../state/reducers/initial-scene.state";
 export class InitialScene extends Phaser.Scene {
   timer = 0;
   width = 20; // in tiles
-  height = 15; // in tiles
+  height = 60; // in tiles
   tileWidth = 32;
   tileHeight = 32;
 
@@ -50,18 +50,18 @@ export class InitialScene extends Phaser.Scene {
       0,
       this.tileWidth,
       this.tileHeight,
-      0xdde024
+      0x0000ff
     );
     cursor.setDepth(10);
     cursor.setOrigin(0, 0);
 
     this.tweens.add({
       targets: cursor,
-      alpha: 0.7,
+      alpha: 0.3,
       yoyo: true,
       repeat: -1,
       ease: "Sine.easeInOut",
-      duration: 500,
+      duration: 800,
     });
 
     this.cursor = cursor;
