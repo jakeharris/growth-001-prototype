@@ -1,6 +1,5 @@
 import { Store } from "@reduxjs/toolkit";
-import { haveSamePosition, Positioned } from "../models";
-import { createTile, Tile } from "../models/tile";
+import { haveSamePosition, Positioned, createTile, Tile } from "../models";
 import { selectInitialSceneCursorPosition, State } from "../state/reducers";
 import { actions } from "../state/reducers/initial-scene.state";
 
