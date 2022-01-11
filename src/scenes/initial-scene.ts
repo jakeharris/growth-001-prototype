@@ -101,7 +101,9 @@ export class InitialScene extends Phaser.Scene {
       }
     }
 
-    this.store.dispatch(actions.createMap(tiles));
+    this.store.dispatch(
+      actions.createMap({ tiles, width: this.width, height: this.height })
+    );
   }
 
   // users phaser keyboard input to move the cursor, etc.
