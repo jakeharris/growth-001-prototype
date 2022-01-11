@@ -1,7 +1,18 @@
 import { Store } from "@reduxjs/toolkit";
-import { haveSamePosition, Positioned, createTile, Tile } from "../models";
-import { selectInitialSceneCursorPosition, State } from "../state/reducers";
-import { actions } from "../state/reducers/initial-scene.state";
+import {
+  haveSamePosition,
+  Positioned,
+  createTile,
+  Tile,
+  getTeamColor,
+  createRandomInitialUnits,
+} from "../models";
+import {
+  selectMapCursorPosition,
+  State,
+} from "../state/reducers/initial-scene";
+import { actions as MapActions } from "../state/reducers/initial-scene/map.state";
+import { actions as UnitsActions } from "../state/reducers/initial-scene/units.state";
 
 export class InitialScene extends Phaser.Scene {
   timer = 0;
@@ -19,14 +30,13 @@ export class InitialScene extends Phaser.Scene {
   }
 
   preload() {
-    this.store.dispatch(actions.preload());
+    this.store.dispatch(MapActions.preload());
+    this.store.dispatch(UnitsActions.preload());
   }
 
   update(time: number, delta: number) {
     // handle changes to cursor position
-    const newCursorPosition = selectInitialSceneCursorPosition(
-      this.store.getState()
-    );
+    const newCursorPosition = selectMapCursorPosition(this.store.getState());
     if (this.cursor && this.cursorHasMoved(newCursorPosition)) {
       this.cursorPosition = newCursorPosition;
       this.cursor.setPosition(
@@ -68,9 +78,7 @@ export class InitialScene extends Phaser.Scene {
       throw new Error("Cursor is null");
     }
 
-    this.cursorPosition = selectInitialSceneCursorPosition(
-      this.store.getState()
-    );
+    this.cursorPosition = selectMapCursorPosition(this.store.getState());
   }
 
   generateMap() {
@@ -101,23 +109,25 @@ export class InitialScene extends Phaser.Scene {
     }
 
     this.store.dispatch(
-      actions.createMap({ tiles, width: this.width, height: this.height })
+      MapActions.createMap({ tiles, width: this.width, height: this.height })
     );
+  }
+
   }
 
   // users phaser keyboard input to move the cursor, etc.
   configureInput() {
     this.input.keyboard.on("keydown-DOWN", () =>
-      this.store.dispatch(actions.moveCursor({ x: 0, y: 1 }))
+      this.store.dispatch(MapActions.moveCursor({ x: 0, y: 1 }))
     );
     this.input.keyboard.on("keydown-UP", () =>
-      this.store.dispatch(actions.moveCursor({ x: 0, y: -1 }))
+      this.store.dispatch(MapActions.moveCursor({ x: 0, y: -1 }))
     );
     this.input.keyboard.on("keydown-LEFT", () =>
-      this.store.dispatch(actions.moveCursor({ x: -1, y: 0 }))
+      this.store.dispatch(MapActions.moveCursor({ x: -1, y: 0 }))
     );
     this.input.keyboard.on("keydown-RIGHT", () =>
-      this.store.dispatch(actions.moveCursor({ x: 1, y: 0 }))
+      this.store.dispatch(MapActions.moveCursor({ x: 1, y: 0 }))
     );
   }
 
