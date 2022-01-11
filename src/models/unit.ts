@@ -15,11 +15,11 @@ export interface Unit {
   range: number;
 }
 
-export const enum Team {
-  Player,
-  Enemy,
-  Ally,
-  Other,
+export enum Team {
+  Player = "Player",
+  Enemy = "Enemy",
+  Ally = "Ally",
+  Other = "Other",
 }
 
 export function getTeamColor(team: Team) {
@@ -59,7 +59,16 @@ export function createRandomBasicUnit(
 ): Unit {
   const x = Math.floor(Math.random() * mapWidth);
   const y = Math.floor(Math.random() * mapHeight);
-  const team = Math.floor(Math.random() * 4) as Team;
+  const teamRand = Math.floor(Math.random() * 4);
+
+  const team =
+    teamRand === 0
+      ? Team.Player
+      : teamRand === 1
+      ? Team.Enemy
+      : teamRand === 2
+      ? Team.Ally
+      : Team.Other;
 
   return createUnit({
     x,
