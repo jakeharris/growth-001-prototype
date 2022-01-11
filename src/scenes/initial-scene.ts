@@ -60,7 +60,7 @@ export class InitialScene extends Phaser.Scene {
       0,
       this.tileWidth,
       this.tileHeight,
-      0x0000ff
+      0xffffff
     );
     cursor.setDepth(10);
     cursor.setOrigin(0, 0);
@@ -90,9 +90,9 @@ export class InitialScene extends Phaser.Scene {
       for (let x = 0; x < this.width; x++) {
         const random = Math.floor(Math.random() * 3);
         const color =
-          random === 0 ? 0xffffff : random === 1 ? 0x00ff00 : 0xff0000;
+          random === 0 ? 0x010101 : random === 1 ? 0x00dd00 : 0xaa2364;
 
-        const traversable = random !== 2;
+        const traversable = random !== 1;
 
         const rect = this.add.rectangle(
           x * this.tileWidth,
