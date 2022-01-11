@@ -49,6 +49,7 @@ export class InitialScene extends Phaser.Scene {
   create() {
     this.generateCursor();
     this.generateMap();
+    this.generateUnits();
 
     this.configureInput();
   }
@@ -113,6 +114,23 @@ export class InitialScene extends Phaser.Scene {
     );
   }
 
+  generateUnits() {
+    const units = createRandomInitialUnits(3, this.width, this.height);
+
+    units.forEach((unit) => {
+      const circle = this.add.circle(
+        unit.x * this.tileWidth,
+        unit.y * this.tileHeight,
+        this.tileWidth / 2,
+        getTeamColor(unit.team)
+      );
+      circle.setDepth(5);
+      circle.setOrigin(0, 0);
+      circle.setName(`unit-${unit.id}`);
+      circle.setInteractive();
+    });
+
+    this.store.dispatch(UnitsActions.createUnits({ units }));
   }
 
   // users phaser keyboard input to move the cursor, etc.
