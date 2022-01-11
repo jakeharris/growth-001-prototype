@@ -47,11 +47,8 @@ export const slice = createSlice({
       return {
         ...state,
         cursorPosition: {
-          x: Math.max(Math.min(state.cursorPosition.x + x, state.width - 1), 0),
-          y: Math.max(
-            Math.min(state.cursorPosition.y + y, state.height - 1),
-            0
-          ),
+          x: clamp(0, state.cursorPosition.x + x, state.width - 1),
+          y: clamp(0, state.cursorPosition.y + y, state.height - 1),
         },
       };
     },
@@ -59,6 +56,10 @@ export const slice = createSlice({
 });
 
 export const { actions, reducer } = slice;
+
+function clamp(min: number, value: number, max: number) {
+  return Math.max(Math.min(value, max), min);
+}
 
 export const selectCursorPosition = (state: State) => state.cursorPosition;
 export const { selectIds, selectEntities, selectAll } = adapter.getSelectors();
