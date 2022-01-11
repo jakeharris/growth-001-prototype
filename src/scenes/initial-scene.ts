@@ -17,7 +17,7 @@ import { actions as UnitsActions } from "../state/reducers/initial-scene/units.s
 export class InitialScene extends Phaser.Scene {
   timer = 0;
   width = 20; // in tiles
-  height = 60; // in tiles
+  height = 15; // in tiles
   tileWidth = 32;
   tileHeight = 32;
 
