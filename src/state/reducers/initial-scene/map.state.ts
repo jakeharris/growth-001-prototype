@@ -4,7 +4,7 @@ import {
   EntityState,
   PayloadAction,
 } from "@reduxjs/toolkit";
-import { Positioned, Tile } from "../../models";
+import { Positioned, Tile } from "../../../models";
 
 export interface State extends EntityState<Tile> {
   cursorPosition: Positioned;
@@ -23,7 +23,7 @@ const initialState: State = {
   cursorPosition: { x: 0, y: 0 },
 };
 
-export const slice = createSlice({
+const slice = createSlice({
   name: "initialScene",
   initialState,
   reducers: {

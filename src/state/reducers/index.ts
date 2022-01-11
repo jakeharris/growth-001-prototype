@@ -1,22 +1,22 @@
 import { createSelector } from "@reduxjs/toolkit";
-import * as initialSceneState from "./initial-scene.state";
+import * as initialSceneState from "./initial-scene";
 
 export type State = {
   initialScene: initialSceneState.State;
 };
 
 export const reducers = {
-  initialScene: initialSceneState.reducer,
+  initialScene: initialSceneState.reducers,
 };
 
 export const selectInitialScene = (state: State) => state.initialScene;
 
 export const selectInitialSceneCursorPosition = createSelector(
   selectInitialScene,
-  initialSceneState.selectCursorPosition
+  initialSceneState.selectMapCursorPosition
 );
 
 export const selectInitialSceneTilesEntities = createSelector(
   selectInitialScene,
-  initialSceneState.selectEntities
+  initialSceneState.selectMapTilesEntities
 );
