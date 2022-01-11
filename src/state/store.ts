@@ -1,7 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { createEpicMiddleware } from "redux-observable";
 import { rootEpic } from "./epics";
-import { reducers } from "./reducers";
+import { reducers } from "./reducers/initial-scene";
 
 const epicMiddleware = createEpicMiddleware();
 
