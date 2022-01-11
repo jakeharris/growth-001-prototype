@@ -8,6 +8,7 @@ import {
   createRandomInitialUnits,
 } from "../models";
 import {
+  selectHoveredUnit,
   selectMapCursorPosition,
   State,
 } from "../state/reducers/initial-scene";
@@ -24,6 +25,8 @@ export class InitialScene extends Phaser.Scene {
   cursor: Phaser.GameObjects.Rectangle | null = null;
 
   cursorPosition: Positioned = { x: 0, y: 0 };
+
+  hasPrintedHoveredUnit = false; // debug
 
   constructor(private store: Store<State>) {
     super({ key: "InitialScene" });
@@ -43,6 +46,15 @@ export class InitialScene extends Phaser.Scene {
         newCursorPosition.x * this.tileWidth,
         newCursorPosition.y * this.tileHeight
       );
+    }
+
+    const hoveredUnit = selectHoveredUnit(this.store.getState());
+    if (!this.hasPrintedHoveredUnit && hoveredUnit) {
+      console.log(`Hovered unit:`, hoveredUnit);
+      this.hasPrintedHoveredUnit = true;
+    }
+    if (!hoveredUnit) {
+      this.hasPrintedHoveredUnit = false;
     }
   }
 
