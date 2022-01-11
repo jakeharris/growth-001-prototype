@@ -26,4 +26,4 @@ const slice = createSlice({
 });
 
 export const { actions, reducer } = slice;
-export const selectEntities = (state: State) => state.entities;
+export const { selectEntities, selectAll } = adapter.getSelectors();

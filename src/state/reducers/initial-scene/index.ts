@@ -26,7 +26,16 @@ export const selectMapTilesEntities = createSelector(
 
 export const selectUnitsState = (state: State) => state.units;
 
-export const selectUnitsEntities = createSelector(
+export const selectUnits = createSelector(
   selectUnitsState,
-  UnitsState.selectEntities
+  UnitsState.selectAll
+);
+
+export const selectHoveredUnit = createSelector(
+  selectUnits,
+  selectMapCursorPosition,
+  (units, cursorPosition) =>
+    units.find(
+      (unit) => unit.x === cursorPosition.x && unit.y === cursorPosition.y
+    )
 );
