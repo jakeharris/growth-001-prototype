@@ -1,4 +1,4 @@
-import { Store } from "@reduxjs/toolkit";
+import { Dictionary, Store } from "@reduxjs/toolkit";
 import {
   haveSamePosition,
   Positioned,
@@ -9,6 +9,7 @@ import {
   VIEWPORT_WIDTH,
   VIEWPORT_HEIGHT,
   getTileName,
+  Unit,
 } from "../models";
 import {
   selectHoveredUnit,
@@ -31,6 +32,7 @@ export class InitialScene extends Phaser.Scene {
   cursorPosition: Positioned = { x: 0, y: 0 };
 
   hasPrintedHoveredUnit = false; // debug
+  hoveredUnitMovementTilesGroup: Phaser.GameObjects.Group | null = null;
 
   constructor(private store: Store<State>) {
     super({ key: "InitialScene" });
@@ -54,10 +56,17 @@ export class InitialScene extends Phaser.Scene {
 
     const hoveredUnit = selectHoveredUnit(this.store.getState());
     if (!this.hasPrintedHoveredUnit && hoveredUnit) {
+      const mapTiles = selectMapTilesEntities(this.store.getState());
       console.log(`Hovered unit:`, hoveredUnit);
+      this.hoveredUnitMovementTilesGroup = this.renderMovementRange(
+        hoveredUnit,
+        mapTiles
+      );
       this.hasPrintedHoveredUnit = true;
     }
     if (!hoveredUnit) {
+      this.hoveredUnitMovementTilesGroup?.destroy(true, true);
+      this.hoveredUnitMovementTilesGroup = null;
       this.hasPrintedHoveredUnit = false;
     }
   }
@@ -209,6 +218,43 @@ export class InitialScene extends Phaser.Scene {
       this.cursorPosition &&
       !haveSamePosition(newCursorPosition, this.cursorPosition)
     );
+  }
+
+  /**
+   * Display a unit's movement range.
+   * @param unit The unit to display the movement range for.
+   * @param mapTiles The tiles of the current map.
+   */
+  renderMovementRange(
+    unit: Unit,
+    mapTiles: Dictionary<Tile>
+  ): Phaser.GameObjects.Group {
+    const { destinationTiles: destinationTilesIds } = unit;
+    const movementTilesGroup = this.add
+      .group()
+      .setName(`unit-${unit.id}-movement`);
+
+    destinationTilesIds.forEach((tileId) => {
+      const tile = mapTiles[tileId];
+
+      if (!tile) return;
+
+      const rect = this.add.rectangle(
+        tile.x * this.tileWidth,
+        tile.y * this.tileHeight,
+        this.tileWidth,
+        this.tileHeight,
+        0x8888ff
+      );
+      rect.setAlpha(0.7);
+      rect.setDepth(4);
+      rect.setOrigin(0, 0);
+      movementTilesGroup.add(rect);
+    });
+
+    console.log(movementTilesGroup);
+
+    return movementTilesGroup;
   }
 }
 
