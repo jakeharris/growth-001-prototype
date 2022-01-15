@@ -103,11 +103,10 @@ export class InitialScene extends Phaser.Scene {
 
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
-        const random = Math.floor(Math.random() * 3);
-        const color =
-          random === 0 ? 0x010101 : random === 1 ? 0x00dd00 : 0xaa2364;
+        const random = Math.floor(Math.random() * 2);
+        const color = random === 0 ? 0x0023d8 : 0x00dd00;
 
-        const traversable = random !== 1;
+        const traversable = random === 1;
 
         const rect = this.add.rectangle(
           x * this.tileWidth,
