@@ -8,10 +8,12 @@ import {
   createRandomInitialUnits,
   VIEWPORT_WIDTH,
   VIEWPORT_HEIGHT,
+  getTileName,
 } from "../models";
 import {
   selectHoveredUnit,
   selectMapCursorPosition,
+  selectMapTilesEntities,
   State,
 } from "../state/reducers/initial-scene";
 import { actions as MapActions } from "../state/reducers/initial-scene/map.state";
@@ -105,8 +107,8 @@ export class InitialScene extends Phaser.Scene {
       for (let x = 0; x < this.width; x++) {
         const random = Math.floor(Math.random() * 2);
         const color = random === 0 ? 0x0023d8 : 0x00dd00;
-
         const traversable = random === 1;
+        const name = getTileName(x, y);
 
         const rect = this.add.rectangle(
           x * this.tileWidth,
@@ -115,11 +117,11 @@ export class InitialScene extends Phaser.Scene {
           this.tileHeight,
           color
         );
-        rect.setName(`rect-${x}-${y}`);
+        rect.setName(name);
         rect.setOrigin(0, 0);
 
         grid.add(rect);
-        tiles.push(createTile(rect.name, x, y, traversable));
+        tiles.push(createTile(name, x, y, traversable));
       }
     }
 
@@ -129,7 +131,8 @@ export class InitialScene extends Phaser.Scene {
   }
 
   generateUnits() {
-    const units = createRandomInitialUnits(3, this.width, this.height);
+    const map = selectMapTilesEntities(this.store.getState());
+    const units = createRandomInitialUnits(3, this.width, this.height, map);
 
     units.forEach((unit) => {
       const circle = this.add.circle(

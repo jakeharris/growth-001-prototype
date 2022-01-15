@@ -19,6 +19,11 @@ export const selectMapCursorPosition = createSelector(
   MapState.selectCursorPosition
 );
 
+export const selectAllMapTiles = createSelector(
+  selectMapState,
+  MapState.selectAll
+);
+
 export const selectMapTilesEntities = createSelector(
   selectMapState,
   MapState.selectEntities

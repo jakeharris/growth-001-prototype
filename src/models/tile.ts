@@ -18,3 +18,12 @@ export function createTile(
     traversable,
   };
 }
+
+/**
+ * Returns the id of this tile by generating it in a consistent way.
+ * @param x The x-position of the tile, in tiles
+ * @param y The y-position of the tile, in tiles
+ */
+export function getTileName(x: number, y: number): string {
+  return `tile-${x}-${y}`;
+}

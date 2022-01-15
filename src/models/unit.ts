@@ -1,3 +1,6 @@
+import { Dictionary } from "@reduxjs/toolkit";
+import { Tile, getTileName } from "./tile";
+
 export interface Unit {
   id: string;
 
@@ -55,12 +58,18 @@ export function createUnit(updates?: Partial<Unit>): Unit {
 export function createRandomBasicUnit(
   mapWidth: number,
   mapHeight: number,
+  mapTiles: Dictionary<Tile>,
   updates?: Partial<Unit>
 ): Unit {
-  const x = Math.floor(Math.random() * mapWidth);
-  const y = Math.floor(Math.random() * mapHeight);
-  const teamRand = Math.floor(Math.random() * 4);
+  let x = Math.floor(Math.random() * mapWidth);
+  let y = Math.floor(Math.random() * mapHeight);
+  // prevent spawning on a tile that is not traversable
+  while (!mapTiles[getTileName(x, y)]?.traversable) {
+    x = Math.floor(Math.random() * mapWidth);
+    y = Math.floor(Math.random() * mapHeight);
+  }
 
+  const teamRand = Math.floor(Math.random() * 4);
   const team =
     teamRand === 0
       ? Team.Player
@@ -81,11 +90,12 @@ export function createRandomBasicUnit(
 export function createRandomBasicUnits(
   unitCount: number,
   mapWidth: number,
-  mapHeightNumber: number
+  mapHeight: number,
+  mapTiles: Dictionary<Tile>
 ) {
   const units = [];
   for (let i = 0; i < unitCount; i++) {
-    units.push(createRandomBasicUnit(mapWidth, mapHeightNumber));
+    units.push(createRandomBasicUnit(mapWidth, mapHeight, mapTiles));
   }
   return units;
 }
@@ -93,14 +103,17 @@ export function createRandomBasicUnits(
 export function createRandomInitialUnits(
   unitCount: number,
   mapWidth: number,
-  mapHeightNumber: number
+  mapHeight: number,
+  mapTiles: Dictionary<Tile>
 ) {
   const units = [];
   units.push(
-    createRandomBasicUnit(mapWidth, mapHeightNumber, { team: Team.Player })
+    createRandomBasicUnit(mapWidth, mapHeight, mapTiles, {
+      team: Team.Player,
+    })
   );
   for (let i = 0; i < unitCount - 1; i++) {
-    units.push(createRandomBasicUnit(mapWidth, mapHeightNumber));
+    units.push(createRandomBasicUnit(mapWidth, mapHeight, mapTiles));
   }
   return units;
 }
