@@ -52,7 +52,7 @@ export function createUnit(updates?: Partial<Unit>): Unit {
     attack: 1,
     defense: 1,
     speed: 1,
-    range: 1,
+    range: 4,
     destinationTiles: [],
     ...updates,
   };
