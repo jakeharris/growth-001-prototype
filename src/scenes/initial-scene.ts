@@ -20,7 +20,7 @@ import { actions as UnitsActions } from "../state/reducers/initial-scene/units.s
 export class InitialScene extends Phaser.Scene {
   timer = 0;
   width = 20; // in tiles
-  height = 15; // in tiles
+  height = 17; // in tiles
   tileWidth = 32;
   tileHeight = 32;
 
@@ -221,16 +221,24 @@ function findScrollOffsets(
 }
 
 /**
- * Find the zoom factor z that, when multiplied by k, results in a value
- * that cleanly divides both a and b.
- * @param k The number to scale.
- * @param a An integer.
- * @param b An integer.
+ * Find the zoom factor z that, when multiplied by k, results in the
+ * smallest value >= 1 that cleanly divides both a and b.
+ * @param k The number to scale. Here, the size of a tile in pixels.
+ * @param a An integer. Here, the width of the viewport in pixels.
+ * @param b An integer. Here, the height of the viewport in pixels.
  * @returns The zoom factor, z.
  */
 function findZoomFactor(k: number, a: number, b: number) {
   const gcd = findGreatestCommonDenominator(a, b);
-  return gcd / k;
+
+  const allCommonFactors = Array.from(Array(gcd + 1), (_, i) => i).filter(
+    (i) => gcd % i === 0
+  );
+  const smallestCommonFactorBiggerThanOrEqualToTileSize = Math.min(
+    ...allCommonFactors.filter((i) => i >= k)
+  );
+
+  return smallestCommonFactorBiggerThanOrEqualToTileSize / k;
 }
 
 /**
