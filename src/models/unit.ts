@@ -149,13 +149,11 @@ export function getDestinationTileIds(
   for (let x = unit.x - unit.range; x <= unit.x + unit.range; x++) {
     for (let y = unit.y - unit.range; y <= unit.y + unit.range; y++) {
       const tile = mapTiles[getTileName(x, y)];
-      if (
-        x >= 0 &&
-        x < mapWidth &&
-        y >= 0 &&
-        y < mapHeight &&
-        tile?.traversable
-      ) {
+      const isWithinBounds = x >= 0 && x < mapWidth && y >= 0 && y < mapHeight;
+      const isWithinStraightLineRange =
+        Math.abs(x - unit.x) + Math.abs(y - unit.y) <= unit.range;
+
+      if (isWithinBounds && isWithinStraightLineRange && tile?.traversable) {
         destinationTiles.push(tile.name);
       }
     }
