@@ -16,6 +16,8 @@ export interface Unit {
   defense: number;
   speed: number;
   range: number;
+
+  destinationTiles: string[]; // the IDs of all tiles that this unit can move to
 }
 
 export enum Team {
@@ -51,6 +53,7 @@ export function createUnit(updates?: Partial<Unit>): Unit {
     defense: 1,
     speed: 1,
     range: 1,
+    destinationTiles: [],
     ...updates,
   };
 }
@@ -79,12 +82,23 @@ export function createRandomBasicUnit(
       ? Team.Ally
       : Team.Other;
 
-  return createUnit({
+  const unit = createUnit({
     x,
     y,
     team,
     ...updates,
   });
+
+  const destinationTiles = getDestinationTileIds(
+    unit,
+    mapWidth,
+    mapHeight,
+    mapTiles
+  );
+
+  unit.destinationTiles = destinationTiles;
+
+  return unit;
 }
 
 export function createRandomBasicUnits(
@@ -116,4 +130,35 @@ export function createRandomInitialUnits(
     units.push(createRandomBasicUnit(mapWidth, mapHeight, mapTiles));
   }
   return units;
+}
+
+/**
+ * @param mapTiles The tiles of the map
+ * @param mapWidth The width of the map, in tiles
+ * @param mapHeight The height of the map, in tiles
+ * @param unit The unit to get the destination tiles for
+ * @returns an array of the ids of all tiles that are within the unit's range
+ */
+export function getDestinationTileIds(
+  unit: Unit,
+  mapWidth: number,
+  mapHeight: number,
+  mapTiles: Dictionary<Tile>
+): string[] {
+  const destinationTiles: string[] = [];
+  for (let x = unit.x - unit.range; x <= unit.x + unit.range; x++) {
+    for (let y = unit.y - unit.range; y <= unit.y + unit.range; y++) {
+      const tile = mapTiles[getTileName(x, y)];
+      if (
+        x >= 0 &&
+        x < mapWidth &&
+        y >= 0 &&
+        y < mapHeight &&
+        tile?.traversable
+      ) {
+        destinationTiles.push(tile.name);
+      }
+    }
+  }
+  return destinationTiles;
 }
