@@ -6,6 +6,8 @@ import {
   Tile,
   getTeamColor,
   createRandomInitialUnits,
+  VIEWPORT_WIDTH,
+  VIEWPORT_HEIGHT,
 } from "../models";
 import {
   selectHoveredUnit,
@@ -63,6 +65,7 @@ export class InitialScene extends Phaser.Scene {
     this.generateMap();
     this.generateUnits();
 
+    this.configureCamera();
     this.configureInput();
   }
 
@@ -145,6 +148,26 @@ export class InitialScene extends Phaser.Scene {
     this.store.dispatch(UnitsActions.createUnits({ units }));
   }
 
+  configureCamera() {
+    const camera = this.cameras.main;
+
+    const zoom = findZoomFactor(
+      this.tileWidth,
+      VIEWPORT_WIDTH,
+      VIEWPORT_HEIGHT
+    );
+    camera.setZoom(zoom, zoom);
+
+    const [xOffset, yOffset] = findScrollOffsets(
+      VIEWPORT_WIDTH,
+      VIEWPORT_HEIGHT,
+      this.tileWidth,
+      this.tileHeight,
+      zoom
+    );
+    camera.setScroll(xOffset, yOffset);
+  }
+
   // users phaser keyboard input to move the cursor, etc.
   configureInput() {
     this.input.keyboard.on("keydown-DOWN", () =>
@@ -168,4 +191,57 @@ export class InitialScene extends Phaser.Scene {
       !haveSamePosition(newCursorPosition, this.cursorPosition)
     );
   }
+}
+
+/**
+ *
+ * @param viewportWidth The width of the viewport in pixels
+ * @param viewportHeight The height of the viewport in pixels
+ * @param tileWidth The width of a tile in pixels
+ * @param tileHeight The height of a tile in pixels
+ * @param zoomFactor The zoom factor, such that tiles cleanly divide the viewport size
+ * @returns The x- and y-offsets to use to position the camera such that
+ *   the top-left of the grid perfectly aligns with the top-left of the viewport
+ */
+function findScrollOffsets(
+  viewportWidth: number,
+  viewportHeight: number,
+  tileWidth: number,
+  tileHeight: number,
+  zoomFactor: number
+) {
+  const horizontallyVisibleTiles = viewportWidth / (tileWidth * zoomFactor);
+  const verticallyVisibleTiles = viewportHeight / (tileHeight * zoomFactor);
+  const xScrollOffset =
+    viewportWidth / 2 - (tileWidth * horizontallyVisibleTiles) / 2;
+  const yScrollOffset =
+    viewportHeight / 2 - (tileHeight * verticallyVisibleTiles) / 2;
+
+  return [-xScrollOffset, -yScrollOffset];
+}
+
+/**
+ * Find the zoom factor z that, when multiplied by k, results in a value
+ * that cleanly divides both a and b.
+ * @param k The number to scale.
+ * @param a An integer.
+ * @param b An integer.
+ * @returns The zoom factor, z.
+ */
+function findZoomFactor(k: number, a: number, b: number) {
+  const gcd = findGreatestCommonDenominator(a, b);
+  return gcd / k;
+}
+
+/**
+ * Recursively finds the greatest common denominator of two numbers.
+ * @param a An integer.
+ * @param b An integer.
+ * @returns The greatest common denominator between a and b.
+ */
+function findGreatestCommonDenominator(a: number, b: number): number {
+  if (b === 0) {
+    return a;
+  }
+  return findGreatestCommonDenominator(b, a % b);
 }
