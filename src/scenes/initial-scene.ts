@@ -166,6 +166,23 @@ export class InitialScene extends Phaser.Scene {
       zoom
     );
     camera.setScroll(xOffset, yOffset);
+
+    camera.setBounds(
+      0,
+      0,
+      this.width * this.tileWidth,
+      this.height * this.tileHeight
+    );
+
+    if (this.cursor)
+      camera.startFollow(
+        this.cursor,
+        false,
+        0.1,
+        0.1,
+        this.tileWidth / 2,
+        this.tileHeight / 2
+      );
   }
 
   // users phaser keyboard input to move the cursor, etc.
