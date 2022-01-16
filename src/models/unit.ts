@@ -17,6 +17,8 @@ export interface Unit {
   speed: number;
   range: number;
 
+  hasMoved: boolean;
+
   destinationTiles: string[]; // the IDs of all tiles that this unit can move to
 }
 
@@ -47,13 +49,18 @@ export function createUnit(updates?: Partial<Unit>): Unit {
     x: 0,
     y: 0,
     team: Team.Player,
+
     hp: 10,
     maxHp: 10,
     attack: 1,
     defense: 1,
     speed: 1,
     range: 4,
+
+    hasMoved: false,
+
     destinationTiles: [],
+
     ...updates,
   };
 }
