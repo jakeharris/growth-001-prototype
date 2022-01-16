@@ -16,6 +16,8 @@ import {
   selectCursorPosition,
   selectMapTilesEntities,
   State,
+  selectIsHoveringUnit,
+  selectIsSelectingUnit,
 } from "../state/reducers/initial-scene";
 import { actions as MapActions } from "../state/reducers/initial-scene/map.state";
 import { actions as UnitsActions } from "../state/reducers/initial-scene/units.state";
@@ -58,17 +60,23 @@ export class InitialScene extends Phaser.Scene {
       );
     }
 
-    const hoveredUnit = selectHoveredUnit(this.store.getState());
-    if (!this.hasPrintedHoveredUnit && hoveredUnit) {
+    const isHovering = selectIsHoveringUnit(this.store.getState());
+    const isSelecting = selectIsSelectingUnit(this.store.getState());
+
+    /**
+     * @todo Candidate for epic?
+     */
+    if (!this.hasPrintedHoveredUnit && isHovering) {
       const mapTiles = selectMapTilesEntities(this.store.getState());
+      const hoveredUnit = selectHoveredUnit(this.store.getState());
       console.log(`Hovered unit:`, hoveredUnit);
       this.hoveredUnitMovementTilesGroup = this.renderMovementRange(
-        hoveredUnit,
+        hoveredUnit!,
         mapTiles
       );
       this.hasPrintedHoveredUnit = true;
     }
-    if (!hoveredUnit) {
+    if (!isHovering && !isSelecting) {
       this.hoveredUnitMovementTilesGroup?.destroy(true, true);
       this.hoveredUnitMovementTilesGroup = null;
       this.hasPrintedHoveredUnit = false;
