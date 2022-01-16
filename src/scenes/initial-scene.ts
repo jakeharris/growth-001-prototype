@@ -286,6 +286,10 @@ export class InitialScene extends Phaser.Scene {
 
         if (hoveredUnit && !hoveredUnit.hasMoved) {
           this.store.dispatch(ControlActions.selectUnit(hoveredUnit));
+          /**
+           * @todo Candidate for epic?
+           */
+          this.clearSelect();
         }
 
         return;
