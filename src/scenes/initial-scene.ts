@@ -81,6 +81,11 @@ export class InitialScene extends Phaser.Scene {
       this.hoveredUnitMovementTilesGroup = null;
       this.hasPrintedHoveredUnit = false;
     }
+    if (isSelecting && this.cursor?.fillColor === 0xffffff) {
+      this.cursor.fillColor = 0xdddd00;
+    } else if (!isSelecting && this.cursor?.fillColor === 0xdddd00) {
+      this.cursor.fillColor = 0xffffff;
+    }
   }
 
   create() {
