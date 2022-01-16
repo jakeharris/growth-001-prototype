@@ -19,6 +19,7 @@ import {
   selectIsHoveringUnit,
   selectIsSelectingUnit,
   selectIsCursorOnValidDestinationTile,
+  selectSelectedUnit,
 } from "../state/reducers/initial-scene";
 import { actions as MapActions } from "../state/reducers/initial-scene/map.state";
 import { actions as UnitsActions } from "../state/reducers/initial-scene/units.state";
@@ -35,8 +36,12 @@ export class InitialScene extends Phaser.Scene {
 
   cursorPosition: Positioned = { x: 0, y: 0 };
 
-  hasPrintedHoveredUnit = false; // debug
+  hasRenderedHoveredUnit = false;
+  renderedHoveredUnit: Unit | null = null;
   hoveredUnitMovementTilesGroup: Phaser.GameObjects.Group | null = null;
+  hasRenderedSelectedUnit = false;
+  renderedSelectedUnit: Unit | null = null;
+  selectedUnitMovementTilesGroup: Phaser.GameObjects.Group | null = null;
 
   constructor(private store: Store<State>) {
     super({ key: "InitialScene" });
@@ -73,34 +78,65 @@ export class InitialScene extends Phaser.Scene {
     /**
      * @todo Candidate for epic?
      */
-    if (!this.hasPrintedHoveredUnit && isHovering) {
-      const mapTiles = selectMapTilesEntities(this.store.getState());
-      const hoveredUnit = selectHoveredUnit(this.store.getState());
-      console.log(`Hovered unit:`, hoveredUnit);
-      this.hoveredUnitMovementTilesGroup = this.renderMovementRange(
-        hoveredUnit!,
-        mapTiles
-      );
-      this.hasPrintedHoveredUnit = true;
+    if (!this.hasRenderedHoveredUnit && isHovering) {
+      this.renderHover();
     }
 
     /**
      * @todo Candidate for epic?
      */
-    if (!isHovering && !isSelecting) {
-      this.hoveredUnitMovementTilesGroup?.destroy(true, true);
-      this.hoveredUnitMovementTilesGroup = null;
-      this.hasPrintedHoveredUnit = false;
+    if (!isHovering) {
+      this.clearHover();
     }
 
     /**
      * @todo Candidate for epic?
      */
-    if (isSelecting && this.cursor?.fillColor === 0xffffff) {
-      this.cursor.fillColor = 0xdddd00;
-    } else if (!isSelecting && this.cursor?.fillColor === 0xdddd00) {
-      this.cursor.fillColor = 0xffffff;
+    if (!this.hasRenderedSelectedUnit && isSelecting) {
+      this.renderSelect();
     }
+
+    /**
+     * @todo Candidate for epic?
+     */
+    if (!isSelecting) {
+      this.clearSelect();
+    }
+  }
+
+  private clearSelect() {
+    this.selectedUnitMovementTilesGroup?.destroy(true, true);
+    this.selectedUnitMovementTilesGroup = null;
+    this.hasRenderedSelectedUnit = false;
+  }
+
+  private renderSelect() {
+    if (this.cursor) this.cursor.fillColor = 0xdddd00;
+    const mapTiles = selectMapTilesEntities(this.store.getState());
+    const selectedUnit = selectSelectedUnit(this.store.getState());
+    console.log(`Selected unit:`, selectedUnit);
+    this.selectedUnitMovementTilesGroup = this.renderMovementRange(
+      selectedUnit!,
+      mapTiles
+    );
+    this.hasRenderedSelectedUnit = true;
+  }
+
+  private clearHover() {
+    this.hoveredUnitMovementTilesGroup?.destroy(true, true);
+    this.hoveredUnitMovementTilesGroup = null;
+    this.hasRenderedHoveredUnit = false;
+  }
+
+  private renderHover() {
+    const mapTiles = selectMapTilesEntities(this.store.getState());
+    const hoveredUnit = selectHoveredUnit(this.store.getState());
+    console.log(`Hovered unit:`, hoveredUnit);
+    this.hoveredUnitMovementTilesGroup = this.renderMovementRange(
+      hoveredUnit!,
+      mapTiles
+    );
+    this.hasRenderedHoveredUnit = true;
   }
 
   create() {
@@ -246,10 +282,10 @@ export class InitialScene extends Phaser.Scene {
       const isSelecting = selectIsSelectingUnit(this.store.getState());
 
       if (isHovering) {
-        const unit = selectHoveredUnit(this.store.getState());
+        const hoveredUnit = selectHoveredUnit(this.store.getState());
 
-        if (unit && !unit.hasMoved) {
-          this.store.dispatch(ControlActions.selectUnit(unit));
+        if (hoveredUnit && !hoveredUnit.hasMoved) {
+          this.store.dispatch(ControlActions.selectUnit(hoveredUnit));
         }
 
         return;
