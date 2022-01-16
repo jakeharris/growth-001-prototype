@@ -24,6 +24,6 @@ export function createTile(
  * @param x The x-position of the tile, in tiles
  * @param y The y-position of the tile, in tiles
  */
-export function getTileName(x: number, y: number): string {
+export function getTileId(x: number, y: number): string {
   return `tile-${x}-${y}`;
 }

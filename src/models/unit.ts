@@ -1,5 +1,5 @@
 import { Dictionary } from "@reduxjs/toolkit";
-import { Tile, getTileName } from "./tile";
+import { Tile, getTileId } from "./tile";
 
 export interface Unit {
   id: string;
@@ -67,7 +67,7 @@ export function createRandomBasicUnit(
   let x = Math.floor(Math.random() * mapWidth);
   let y = Math.floor(Math.random() * mapHeight);
   // prevent spawning on a tile that is not traversable
-  while (!mapTiles[getTileName(x, y)]?.traversable) {
+  while (!mapTiles[getTileId(x, y)]?.traversable) {
     x = Math.floor(Math.random() * mapWidth);
     y = Math.floor(Math.random() * mapHeight);
   }
@@ -148,7 +148,7 @@ export function getDestinationTileIds(
   const destinationTiles: string[] = [];
   for (let x = unit.x - unit.range; x <= unit.x + unit.range; x++) {
     for (let y = unit.y - unit.range; y <= unit.y + unit.range; y++) {
-      const tile = mapTiles[getTileName(x, y)];
+      const tile = mapTiles[getTileId(x, y)];
       const isWithinBounds = x >= 0 && x < mapWidth && y >= 0 && y < mapHeight;
       const isWithinStraightLineRange =
         Math.abs(x - unit.x) + Math.abs(y - unit.y) <= unit.range;

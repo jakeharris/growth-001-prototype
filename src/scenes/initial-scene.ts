@@ -8,7 +8,7 @@ import {
   createRandomInitialUnits,
   VIEWPORT_WIDTH,
   VIEWPORT_HEIGHT,
-  getTileName,
+  getTileId,
   Unit,
 } from "../models";
 import {
@@ -117,7 +117,7 @@ export class InitialScene extends Phaser.Scene {
         const random = Math.floor(Math.random() * 2);
         const color = random === 0 ? 0x0023d8 : 0x00dd00;
         const traversable = random === 1;
-        const name = getTileName(x, y);
+        const name = getTileId(x, y);
 
         const rect = this.add.rectangle(
           x * this.tileWidth,
