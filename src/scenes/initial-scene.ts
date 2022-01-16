@@ -13,12 +13,13 @@ import {
 } from "../models";
 import {
   selectHoveredUnit,
-  selectMapCursorPosition,
+  selectCursorPosition,
   selectMapTilesEntities,
   State,
 } from "../state/reducers/initial-scene";
 import { actions as MapActions } from "../state/reducers/initial-scene/map.state";
 import { actions as UnitsActions } from "../state/reducers/initial-scene/units.state";
+import { actions as ControlActions } from "../state/reducers/initial-scene/control.state";
 
 export class InitialScene extends Phaser.Scene {
   timer = 0;
@@ -41,11 +42,14 @@ export class InitialScene extends Phaser.Scene {
   preload() {
     this.store.dispatch(MapActions.preload());
     this.store.dispatch(UnitsActions.preload());
+    this.store.dispatch(
+      ControlActions.preload({ width: this.width, height: this.height })
+    );
   }
 
   update(time: number, delta: number) {
     // handle changes to cursor position
-    const newCursorPosition = selectMapCursorPosition(this.store.getState());
+    const newCursorPosition = selectCursorPosition(this.store.getState());
     if (this.cursor && this.cursorHasMoved(newCursorPosition)) {
       this.cursorPosition = newCursorPosition;
       this.cursor.setPosition(
@@ -105,7 +109,7 @@ export class InitialScene extends Phaser.Scene {
       throw new Error("Cursor is null");
     }
 
-    this.cursorPosition = selectMapCursorPosition(this.store.getState());
+    this.cursorPosition = selectCursorPosition(this.store.getState());
   }
 
   generateMap() {
@@ -134,9 +138,7 @@ export class InitialScene extends Phaser.Scene {
       }
     }
 
-    this.store.dispatch(
-      MapActions.createMap({ tiles, width: this.width, height: this.height })
-    );
+    this.store.dispatch(MapActions.createMap({ tiles }));
   }
 
   generateUnits() {
@@ -199,16 +201,16 @@ export class InitialScene extends Phaser.Scene {
   // users phaser keyboard input to move the cursor, etc.
   configureInput() {
     this.input.keyboard.on("keydown-DOWN", () =>
-      this.store.dispatch(MapActions.moveCursor({ x: 0, y: 1 }))
+      this.store.dispatch(ControlActions.moveCursor({ x: 0, y: 1 }))
     );
     this.input.keyboard.on("keydown-UP", () =>
-      this.store.dispatch(MapActions.moveCursor({ x: 0, y: -1 }))
+      this.store.dispatch(ControlActions.moveCursor({ x: 0, y: -1 }))
     );
     this.input.keyboard.on("keydown-LEFT", () =>
-      this.store.dispatch(MapActions.moveCursor({ x: -1, y: 0 }))
+      this.store.dispatch(ControlActions.moveCursor({ x: -1, y: 0 }))
     );
     this.input.keyboard.on("keydown-RIGHT", () =>
-      this.store.dispatch(MapActions.moveCursor({ x: 1, y: 0 }))
+      this.store.dispatch(ControlActions.moveCursor({ x: 1, y: 0 }))
     );
   }
 
