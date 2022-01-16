@@ -252,8 +252,6 @@ export class InitialScene extends Phaser.Scene {
       movementTilesGroup.add(rect);
     });
 
-    console.log(movementTilesGroup);
-
     return movementTilesGroup;
   }
 }
