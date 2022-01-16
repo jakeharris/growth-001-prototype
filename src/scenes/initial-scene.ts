@@ -104,41 +104,6 @@ export class InitialScene extends Phaser.Scene {
     }
   }
 
-  private clearSelect() {
-    this.selectedUnitMovementTilesGroup?.destroy(true, true);
-    this.selectedUnitMovementTilesGroup = null;
-    this.hasRenderedSelectedUnit = false;
-  }
-
-  private renderSelect() {
-    if (this.cursor) this.cursor.fillColor = 0xdddd00;
-    const mapTiles = selectMapTilesEntities(this.store.getState());
-    const selectedUnit = selectSelectedUnit(this.store.getState());
-    console.log(`Selected unit:`, selectedUnit);
-    this.selectedUnitMovementTilesGroup = this.renderMovementRange(
-      selectedUnit!,
-      mapTiles
-    );
-    this.hasRenderedSelectedUnit = true;
-  }
-
-  private clearHover() {
-    this.hoveredUnitMovementTilesGroup?.destroy(true, true);
-    this.hoveredUnitMovementTilesGroup = null;
-    this.hasRenderedHoveredUnit = false;
-  }
-
-  private renderHover() {
-    const mapTiles = selectMapTilesEntities(this.store.getState());
-    const hoveredUnit = selectHoveredUnit(this.store.getState());
-    console.log(`Hovered unit:`, hoveredUnit);
-    this.hoveredUnitMovementTilesGroup = this.renderMovementRange(
-      hoveredUnit!,
-      mapTiles
-    );
-    this.hasRenderedHoveredUnit = true;
-  }
-
   create() {
     this.generateCursor();
     this.generateMap();
@@ -350,6 +315,41 @@ export class InitialScene extends Phaser.Scene {
     });
 
     return movementTilesGroup;
+  }
+
+  clearSelect() {
+    this.selectedUnitMovementTilesGroup?.destroy(true, true);
+    this.selectedUnitMovementTilesGroup = null;
+    this.hasRenderedSelectedUnit = false;
+  }
+
+  renderSelect() {
+    if (this.cursor) this.cursor.fillColor = 0xdddd00;
+    const mapTiles = selectMapTilesEntities(this.store.getState());
+    const selectedUnit = selectSelectedUnit(this.store.getState());
+    console.log(`Selected unit:`, selectedUnit);
+    this.selectedUnitMovementTilesGroup = this.renderMovementRange(
+      selectedUnit!,
+      mapTiles
+    );
+    this.hasRenderedSelectedUnit = true;
+  }
+
+  clearHover() {
+    this.hoveredUnitMovementTilesGroup?.destroy(true, true);
+    this.hoveredUnitMovementTilesGroup = null;
+    this.hasRenderedHoveredUnit = false;
+  }
+
+  renderHover() {
+    const mapTiles = selectMapTilesEntities(this.store.getState());
+    const hoveredUnit = selectHoveredUnit(this.store.getState());
+    console.log(`Hovered unit:`, hoveredUnit);
+    this.hoveredUnitMovementTilesGroup = this.renderMovementRange(
+      hoveredUnit!,
+      mapTiles
+    );
+    this.hasRenderedHoveredUnit = true;
   }
 }
 
