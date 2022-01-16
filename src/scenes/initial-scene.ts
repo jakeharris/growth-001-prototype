@@ -42,6 +42,9 @@ export class InitialScene extends Phaser.Scene {
   }
 
   preload() {
+    /**
+     * @todo Turn this all into one message that all reducers/slices are listening for
+     */
     this.store.dispatch(MapActions.preload());
     this.store.dispatch(UnitsActions.preload());
     this.store.dispatch(
@@ -50,6 +53,9 @@ export class InitialScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number) {
+    /**
+     * @todo Candidate for epic?
+     */
     // handle changes to cursor position
     const newCursorPosition = selectCursorPosition(this.store.getState());
     if (this.cursor && this.cursorHasMoved(newCursorPosition)) {
@@ -76,11 +82,19 @@ export class InitialScene extends Phaser.Scene {
       );
       this.hasPrintedHoveredUnit = true;
     }
+
+    /**
+     * @todo Candidate for epic?
+     */
     if (!isHovering && !isSelecting) {
       this.hoveredUnitMovementTilesGroup?.destroy(true, true);
       this.hoveredUnitMovementTilesGroup = null;
       this.hasPrintedHoveredUnit = false;
     }
+
+    /**
+     * @todo Candidate for epic?
+     */
     if (isSelecting && this.cursor?.fillColor === 0xffffff) {
       this.cursor.fillColor = 0xdddd00;
     } else if (!isSelecting && this.cursor?.fillColor === 0xdddd00) {
