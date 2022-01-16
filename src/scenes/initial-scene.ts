@@ -220,6 +220,33 @@ export class InitialScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-RIGHT", () =>
       this.store.dispatch(ControlActions.moveCursor({ x: 1, y: 0 }))
     );
+
+    this.input.keyboard.on("keydown-Z", () => {
+      const isHovering = selectIsHoveringUnit(this.store.getState());
+      const isSelecting = selectIsSelectingUnit(this.store.getState());
+
+      if (isHovering) {
+        const unit = selectHoveredUnit(this.store.getState());
+
+        if (unit && !unit.hasMoved) {
+          this.store.dispatch(ControlActions.selectUnit(unit));
+        }
+
+        return;
+      }
+
+      if (isSelecting) {
+        const isCursorOnValidDestinationTile =
+          selectIsCursorOnValidDestinationTile(this.store.getState());
+
+        if (isCursorOnValidDestinationTile) {
+          console.log("valid!");
+          // this.store.dispatch(ControlActions.moveUnit());
+        } else console.log("invalid!");
+
+        return;
+      }
+    });
   }
 
   cursorHasMoved(newCursorPosition: Positioned) {
