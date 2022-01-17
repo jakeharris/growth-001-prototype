@@ -20,6 +20,7 @@ export interface Unit {
   hasMoved: boolean;
 
   destinationTiles: string[]; // the IDs of all tiles that this unit can move to
+  pendingPosition: { x: number; y: number } | null; // the position that this unit is moving to
 }
 
 export enum Team {
@@ -60,6 +61,7 @@ export function createUnit(updates?: Partial<Unit>): Unit {
     hasMoved: false,
 
     destinationTiles: [],
+    pendingPosition: null,
 
     ...updates,
   };

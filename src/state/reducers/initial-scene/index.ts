@@ -72,29 +72,48 @@ export const selectIsSelectingUnit = createSelector(
   selectControlState,
   ControlState.selectIsSelectingUnit
 );
+export const selectDestinationTile = createSelector(
+  selectCursorPosition,
+  selectMapTilesEntities,
+  (cursorPosition, mapTiles) =>
+    mapTiles[getTileId(cursorPosition.x, cursorPosition.y)]
+);
 export const selectIsCursorOnValidDestinationTile = createSelector(
   selectUnits,
-  selectMapTilesEntities,
-  selectCursorPosition,
+  selectDestinationTile,
   selectSelectedUnit,
-  (units, mapTiles, cursorPosition, selectedUnit) => {
+  (units, destinationTile, selectedUnit) => {
     if (selectedUnit === null) return false;
+    if (destinationTile === undefined) return false;
 
-    const { x, y } = cursorPosition;
-    const tileId = getTileId(x, y);
-    const destinationTile = mapTiles[tileId];
     const isDestinationTileWithinRange = selectedUnit.destinationTiles.some(
-      (destinationTileId) => destinationTileId === tileId
+      (destinationTileId) => destinationTileId === destinationTile.id
     );
 
-    if (destinationTile === undefined) return false;
     if (!isDestinationTileWithinRange) return false;
     if (!destinationTile.traversable) return false;
 
     return units.every((unit) => {
       if (unit === selectedUnit) return true;
 
-      return unit.x !== x || unit.y !== y;
+      return unit.x !== destinationTile.x || unit.y !== destinationTile.y;
     });
   }
+);
+export const selectIsMoving = createSelector(
+  selectControlState,
+  ControlState.selectIsMoving
+);
+export const selectMovingUnitId = createSelector(
+  selectControlState,
+  ControlState.selectMovingUnitId
+);
+export const selectMovingUnit = createSelector(
+  selectUnits,
+  selectMovingUnitId,
+  (units, movingUnitId) => units.find((unit) => unit.id === movingUnitId)
+);
+export const selectPreviousUnitPosition = createSelector(
+  selectMovingUnit,
+  (movingUnit) => (movingUnit ? { x: movingUnit.x, y: movingUnit.y } : null)
 );

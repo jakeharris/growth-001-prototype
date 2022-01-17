@@ -13,7 +13,7 @@ export const selectInitialScene = (state: State) => state.initialScene;
 
 export const selectInitialSceneCursorPosition = createSelector(
   selectInitialScene,
-  initialSceneState.selectMapCursorPosition
+  initialSceneState.selectCursorPosition
 );
 
 export const selectInitialSceneTilesEntities = createSelector(

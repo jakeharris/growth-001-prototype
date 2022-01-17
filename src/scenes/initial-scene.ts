@@ -20,6 +20,10 @@ import {
   selectIsSelectingUnit,
   selectIsCursorOnValidDestinationTile,
   selectSelectedUnit,
+  selectDestinationTile,
+  selectIsMoving,
+  selectMovingUnit,
+  selectMovingUnitId,
 } from "../state/reducers/initial-scene";
 import { actions as MapActions } from "../state/reducers/initial-scene/map.state";
 import { actions as UnitsActions } from "../state/reducers/initial-scene/units.state";
@@ -39,9 +43,14 @@ export class InitialScene extends Phaser.Scene {
   hasRenderedHoveredUnit = false;
   renderedHoveredUnit: Unit | null = null;
   hoveredUnitMovementTilesGroup: Phaser.GameObjects.Group | null = null;
+
   hasRenderedSelectedUnit = false;
   renderedSelectedUnit: Unit | null = null;
   selectedUnitMovementTilesGroup: Phaser.GameObjects.Group | null = null;
+
+  hasRenderedMovingUnit = false;
+  renderedMovingUnit: Unit | null = null;
+  movingUnitGroup: Phaser.GameObjects.Group | null = null;
 
   constructor(private store: Store<State>) {
     super({ key: "InitialScene" });
@@ -74,6 +83,7 @@ export class InitialScene extends Phaser.Scene {
 
     const isHovering = selectIsHoveringUnit(this.store.getState());
     const isSelecting = selectIsSelectingUnit(this.store.getState());
+    const isMoving = selectIsMoving(this.store.getState());
 
     /**
      * @todo Candidate for epic?
@@ -85,7 +95,7 @@ export class InitialScene extends Phaser.Scene {
     /**
      * @todo Candidate for epic?
      */
-    if (!isHovering) {
+    if (this.hasRenderedHoveredUnit && !isHovering) {
       this.clearHover();
     }
 
@@ -99,8 +109,22 @@ export class InitialScene extends Phaser.Scene {
     /**
      * @todo Candidate for epic?
      */
-    if (!isSelecting) {
+    if (this.hasRenderedSelectedUnit && !isSelecting) {
       this.clearSelect();
+    }
+
+    /**
+     * @todo Candidate for epic?
+     */
+    if (!this.hasRenderedMovingUnit && isMoving) {
+      this.renderMove();
+    }
+
+    /**
+     * @todo Candidate for epic?
+     */
+    if (this.hasRenderedMovingUnit && !isMoving) {
+      this.clearMove();
     }
   }
 
@@ -245,6 +269,7 @@ export class InitialScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-Z", () => {
       const isHovering = selectIsHoveringUnit(this.store.getState());
       const isSelecting = selectIsSelectingUnit(this.store.getState());
+      const isMoving = selectIsMoving(this.store.getState());
 
       if (isHovering) {
         const hoveredUnit = selectHoveredUnit(this.store.getState());
@@ -265,11 +290,49 @@ export class InitialScene extends Phaser.Scene {
           selectIsCursorOnValidDestinationTile(this.store.getState());
 
         if (isCursorOnValidDestinationTile) {
+          const unit = selectSelectedUnit(this.store.getState())!;
+          const destinationTile = selectDestinationTile(this.store.getState())!;
+
           console.log("valid!");
-          // this.store.dispatch(ControlActions.moveUnit());
+
+          this.store.dispatch(
+            ControlActions.moveUnit({
+              unitId: unit.id,
+              x: destinationTile.x,
+              y: destinationTile.y,
+            })
+          );
         } else console.log("invalid!");
 
         return;
+      }
+
+      if (isMoving) {
+        const unitId = selectMovingUnitId(this.store.getState());
+
+        if (!unitId) throw new Error("tried moving a unit but unitId is null");
+
+        /**
+         * @todo Candidate for epic?
+         * If so, this will happen after the dispatch
+         */
+        const unit = selectMovingUnit(this.store.getState());
+
+        if (!unit) throw new Error("tried moving a unit but unit is null");
+        if (!unit.pendingPosition)
+          throw new Error(
+            "tried moving a unit but unit.pendingPosition is null"
+          );
+
+        const unitDisplay = this.children.getByName(
+          `unit-${unitId}`
+        )! as Phaser.GameObjects.Shape;
+        unitDisplay.setPosition(
+          unit.pendingPosition.x * this.tileWidth,
+          unit.pendingPosition.y * this.tileHeight
+        );
+
+        this.store.dispatch(ControlActions.confirmMoveUnit({ unitId }));
       }
     });
   }
@@ -317,6 +380,35 @@ export class InitialScene extends Phaser.Scene {
     return movementTilesGroup;
   }
 
+  /**
+   * Display a unit's pending movement in the context of their
+   * movement range and current position.
+   * @param unit The unit to display the movement for.
+   * @param mapTiles The tiles of the current map.
+   */
+  renderPendingMovement(
+    unit: Unit,
+    mapTiles: Dictionary<Tile>
+  ): Phaser.GameObjects.Group {
+    console.log(unit);
+    const group = this.renderMovementRange(unit, mapTiles);
+
+    if (!unit.pendingPosition) throw Error("Unit has no pending position");
+
+    const newPosition = this.add.circle(
+      unit.pendingPosition.x * this.tileWidth,
+      unit.pendingPosition.y * this.tileHeight,
+      this.tileWidth / 2,
+      getTeamColor(unit.team)
+    );
+    newPosition.setAlpha(0.7);
+    newPosition.setDepth(5);
+    newPosition.setOrigin(0, 0);
+
+    group.add(newPosition);
+    return group;
+  }
+
   clearSelect() {
     this.selectedUnitMovementTilesGroup?.destroy(true, true);
     this.selectedUnitMovementTilesGroup = null;
@@ -350,6 +442,20 @@ export class InitialScene extends Phaser.Scene {
       mapTiles
     );
     this.hasRenderedHoveredUnit = true;
+  }
+
+  renderMove() {
+    const movingUnit = selectMovingUnit(this.store.getState());
+    const mapTiles = selectMapTilesEntities(this.store.getState());
+    console.log(`Moving unit:`, movingUnit);
+    this.movingUnitGroup = this.renderPendingMovement(movingUnit!, mapTiles);
+    this.hasRenderedMovingUnit = true;
+  }
+
+  clearMove() {
+    this.movingUnitGroup?.destroy(true, true);
+    this.movingUnitGroup = null;
+    this.hasRenderedMovingUnit = false;
   }
 }
 

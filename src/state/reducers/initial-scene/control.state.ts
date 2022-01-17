@@ -8,6 +8,7 @@ export interface State {
 
   cursorPosition: Positioned;
   selectedUnit: Unit | null;
+  movingUnitId: string | null;
 }
 
 export const initialState: State = {
@@ -15,6 +16,7 @@ export const initialState: State = {
   height: 0,
   cursorPosition: { x: 0, y: 0 },
   selectedUnit: null,
+  movingUnitId: null,
 };
 
 export const slice = createSlice({
@@ -39,6 +41,18 @@ export const slice = createSlice({
         },
       };
     },
+    moveUnit: (
+      state,
+      action: PayloadAction<{ unitId: string; x: number; y: number }>
+    ) => ({
+      ...state,
+      selectedUnit: null,
+      movingUnitId: action.payload.unitId,
+    }),
+    confirmMoveUnit: (state, action: PayloadAction<{ unitId: string }>) => ({
+      ...state,
+      movingUnitId: null,
+    }),
   },
 });
 
@@ -48,3 +62,5 @@ export const selectCursorPosition = (state: State) => state.cursorPosition;
 export const selectSelectedUnit = (state: State) => state.selectedUnit;
 export const selectIsSelectingUnit = (state: State) =>
   state.selectedUnit !== null;
+export const selectIsMoving = (state: State) => state.movingUnitId !== null;
+export const selectMovingUnitId = (state: State) => state.movingUnitId;
