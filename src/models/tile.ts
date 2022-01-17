@@ -1,17 +1,20 @@
 import { Positioned } from "./positioned";
 
 export interface Tile extends Positioned {
-  name: string; // the name of the Phaser rect or image that this Tile represents
+  id: string; // the id, which is also the name of the Phaser rect or image that this Tile represents
+  name: string;
   traversable: boolean;
 }
 
 export function createTile(
+  id: string,
   name: string,
   x: number,
   y: number,
   traversable: boolean = true
 ): Tile {
   return {
+    id,
     name,
     x,
     y,

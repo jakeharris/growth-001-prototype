@@ -8,9 +8,7 @@ import { Tile } from "../../../models";
 
 export type State = EntityState<Tile>;
 
-const adapter = createEntityAdapter({
-  selectId: (tile: Tile) => tile.name,
-});
+const adapter = createEntityAdapter<Tile>();
 
 const initialState: State = adapter.getInitialState();
 

@@ -161,7 +161,7 @@ export function getDestinationTileIds(
         Math.abs(x - unit.x) + Math.abs(y - unit.y) <= unit.range;
 
       if (isWithinBounds && isWithinStraightLineRange && tile?.traversable) {
-        destinationTiles.push(tile.name);
+        destinationTiles.push(tile.id);
       }
     }
   }

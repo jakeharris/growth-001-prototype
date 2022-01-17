@@ -150,7 +150,7 @@ export class InitialScene extends Phaser.Scene {
         const random = Math.floor(Math.random() * 2);
         const color = random === 0 ? 0x0023d8 : 0x00dd00;
         const traversable = random === 1;
-        const name = getTileId(x, y);
+        const id = getTileId(x, y);
 
         const rect = this.add.rectangle(
           x * this.tileWidth,
@@ -159,11 +159,11 @@ export class InitialScene extends Phaser.Scene {
           this.tileHeight,
           color
         );
-        rect.setName(name);
+        rect.setName(id);
         rect.setOrigin(0, 0);
 
         grid.add(rect);
-        tiles.push(createTile(name, x, y, traversable));
+        tiles.push(createTile(id, id, x, y, traversable)); // not sure what the name should actually be
       }
     }
 
