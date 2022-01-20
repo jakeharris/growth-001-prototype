@@ -11,6 +11,7 @@ import {
   getTileId,
   Unit,
   Colors,
+  Team,
 } from "../models";
 import {
   selectHoveredUnit,
@@ -290,7 +291,11 @@ export class InitialScene extends Phaser.Scene {
       if (isHovering) {
         const hoveredUnit = selectHoveredUnit(this.store.getState());
 
-        if (hoveredUnit && !hoveredUnit.hasMoved) {
+        if (
+          hoveredUnit &&
+          hoveredUnit.team === Team.Player &&
+          !hoveredUnit.hasMoved
+        ) {
           this.store.dispatch(ControlActions.selectUnit(hoveredUnit.id));
           /**
            * @todo Candidate for epic?
