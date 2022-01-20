@@ -64,9 +64,14 @@ export const selectIsHoveringUnit = createSelector(
   selectHoveredUnit,
   (hoveredUnit) => hoveredUnit !== undefined
 );
-export const selectSelectedUnit = createSelector(
+export const selectSelectedUnitId = createSelector(
   selectControlState,
-  ControlState.selectSelectedUnit
+  ControlState.selectSelectedUnitId
+);
+export const selectSelectedUnit = createSelector(
+  selectSelectedUnitId,
+  selectUnits,
+  (selectedUnitId, units) => units.find((unit) => unit.id === selectedUnitId)
 );
 export const selectIsSelectingUnit = createSelector(
   selectControlState,

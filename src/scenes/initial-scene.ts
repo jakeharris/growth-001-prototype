@@ -284,7 +284,7 @@ export class InitialScene extends Phaser.Scene {
         const hoveredUnit = selectHoveredUnit(this.store.getState());
 
         if (hoveredUnit && !hoveredUnit.hasMoved) {
-          this.store.dispatch(ControlActions.selectUnit(hoveredUnit));
+          this.store.dispatch(ControlActions.selectUnit(hoveredUnit.id));
           /**
            * @todo Candidate for epic?
            */
