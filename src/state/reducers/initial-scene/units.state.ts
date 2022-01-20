@@ -46,6 +46,8 @@ const slice = createSlice({
           x: unit.pendingPosition.x,
           y: unit.pendingPosition.y,
           pendingPosition: null,
+          hasMoved: true,
+          destinationTiles: [],
         },
       });
     });
