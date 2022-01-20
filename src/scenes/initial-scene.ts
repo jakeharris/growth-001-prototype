@@ -30,6 +30,12 @@ import { actions as MapActions } from "../state/reducers/initial-scene/map.state
 import { actions as UnitsActions } from "../state/reducers/initial-scene/units.state";
 import { actions as ControlActions } from "../state/reducers/initial-scene/control.state";
 
+const enum Depth {
+  Tiles = 0,
+  Units = 5,
+  Cursor = 10,
+}
+
 export class InitialScene extends Phaser.Scene {
   timer = 0;
   width = 20; // in tiles
@@ -146,7 +152,7 @@ export class InitialScene extends Phaser.Scene {
       this.tileHeight,
       0xffffff
     );
-    cursor.setDepth(10);
+    cursor.setDepth(Depth.Cursor);
     cursor.setOrigin(0, 0);
 
     this.tweens.add({
@@ -185,6 +191,7 @@ export class InitialScene extends Phaser.Scene {
           color
         );
         rect.setName(id);
+        rect.setDepth(Depth.Tiles);
         rect.setOrigin(0, 0);
 
         grid.add(rect);
@@ -206,7 +213,7 @@ export class InitialScene extends Phaser.Scene {
         this.tileWidth / 2,
         getTeamColor(unit.team)
       );
-      circle.setDepth(5);
+      circle.setDepth(Depth.Units);
       circle.setOrigin(0, 0);
       circle.setName(`unit-${unit.id}`);
       circle.setInteractive();
@@ -398,7 +405,7 @@ export class InitialScene extends Phaser.Scene {
         0x8888ff
       );
       rect.setAlpha(0.7);
-      rect.setDepth(4);
+      rect.setDepth(Depth.Tiles + 1);
       rect.setOrigin(0, 0);
       movementTilesGroup.add(rect);
     });
@@ -427,8 +434,9 @@ export class InitialScene extends Phaser.Scene {
       this.tileWidth / 2,
       getTeamColor(unit.team)
     );
+    newPosition.setName(`unit-${unit.id}-pending-position`);
     newPosition.setAlpha(0.7);
-    newPosition.setDepth(5);
+    newPosition.setDepth(Depth.Cursor + 1);
     newPosition.setOrigin(0, 0);
 
     group.add(newPosition);
