@@ -10,6 +10,7 @@ import {
   VIEWPORT_HEIGHT,
   getTileId,
   Unit,
+  Colors,
 } from "../models";
 import {
   selectHoveredUnit,
@@ -331,6 +332,7 @@ export class InitialScene extends Phaser.Scene {
           unit.pendingPosition.x * this.tileWidth,
           unit.pendingPosition.y * this.tileHeight
         );
+        unitDisplay.fillColor = Colors.TurnTaken;
 
         this.store.dispatch(ControlActions.confirmMoveUnit({ unitId }));
       }

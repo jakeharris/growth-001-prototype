@@ -30,16 +30,24 @@ export enum Team {
   Other = "Other",
 }
 
+export enum Colors {
+  Player = 0x0000ff,
+  Enemy = 0xff0000,
+  Ally = 0x00ff00,
+  Other = 0xffff00,
+  TurnTaken = 0x777777,
+}
+
 export function getTeamColor(team: Team) {
   switch (team) {
     case Team.Player:
-      return 0x0000ff;
+      return Colors.Player;
     case Team.Enemy:
-      return 0xff0000;
+      return Colors.Enemy;
     case Team.Ally:
-      return 0x00ff00;
+      return Colors.Ally;
     case Team.Other:
-      return 0xffff00;
+      return Colors.Other;
   }
 }
 
