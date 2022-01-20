@@ -254,18 +254,26 @@ export class InitialScene extends Phaser.Scene {
 
   // users phaser keyboard input to move the cursor, etc.
   configureInput() {
-    this.input.keyboard.on("keydown-DOWN", () =>
-      this.store.dispatch(ControlActions.moveCursor({ x: 0, y: 1 }))
-    );
-    this.input.keyboard.on("keydown-UP", () =>
-      this.store.dispatch(ControlActions.moveCursor({ x: 0, y: -1 }))
-    );
-    this.input.keyboard.on("keydown-LEFT", () =>
-      this.store.dispatch(ControlActions.moveCursor({ x: -1, y: 0 }))
-    );
-    this.input.keyboard.on("keydown-RIGHT", () =>
-      this.store.dispatch(ControlActions.moveCursor({ x: 1, y: 0 }))
-    );
+    this.input.keyboard.on("keydown-DOWN", () => {
+      const isMoving = selectIsMoving(this.store.getState());
+      if (!isMoving)
+        this.store.dispatch(ControlActions.moveCursor({ x: 0, y: 1 }));
+    });
+    this.input.keyboard.on("keydown-UP", () => {
+      const isMoving = selectIsMoving(this.store.getState());
+      if (!isMoving)
+        this.store.dispatch(ControlActions.moveCursor({ x: 0, y: -1 }));
+    });
+    this.input.keyboard.on("keydown-LEFT", () => {
+      const isMoving = selectIsMoving(this.store.getState());
+      if (!isMoving)
+        this.store.dispatch(ControlActions.moveCursor({ x: -1, y: 0 }));
+    });
+    this.input.keyboard.on("keydown-RIGHT", () => {
+      const isMoving = selectIsMoving(this.store.getState());
+      if (!isMoving)
+        this.store.dispatch(ControlActions.moveCursor({ x: 1, y: 0 }));
+    });
 
     this.input.keyboard.on("keydown-Z", () => {
       const isHovering = selectIsHoveringUnit(this.store.getState());
