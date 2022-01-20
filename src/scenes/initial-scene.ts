@@ -311,7 +311,9 @@ export class InitialScene extends Phaser.Scene {
               y: destinationTile.y,
             })
           );
-        } else console.log("invalid!");
+        } else {
+          this.store.dispatch(ControlActions.cancelSelectUnit());
+        }
 
         return;
       }
