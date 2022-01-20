@@ -88,8 +88,8 @@ export const selectIsCursorOnValidDestinationTile = createSelector(
   selectDestinationTile,
   selectSelectedUnit,
   (units, destinationTile, selectedUnit) => {
-    if (selectedUnit === null) return false;
-    if (destinationTile === undefined) return false;
+    if (!selectedUnit) return false;
+    if (!destinationTile) return false;
 
     const isDestinationTileWithinRange = selectedUnit.destinationTiles.some(
       (destinationTileId) => destinationTileId === destinationTile.id
