@@ -51,7 +51,7 @@ export const slice = createSlice({
       action: PayloadAction<{ unitId: string; x: number; y: number }>
     ) => ({
       ...state,
-      selectedUnit: null,
+      selectedUnitId: null,
       movingUnitId: action.payload.unitId,
     }),
     confirmMoveUnit: (state, action: PayloadAction<{ unitId: string }>) => ({
@@ -60,7 +60,7 @@ export const slice = createSlice({
     }),
     cancelMoveUnit: (state) => ({
       ...state,
-      selectedUnit: state.movingUnitId,
+      selectedUnitId: state.movingUnitId,
       movingUnitId: null,
     }),
   },
