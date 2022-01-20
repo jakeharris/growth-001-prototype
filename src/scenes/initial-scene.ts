@@ -311,6 +311,15 @@ export class InitialScene extends Phaser.Scene {
 
           console.log("valid!");
 
+          const unitDisplay = this.children.getByName(
+            `unit-${unit.id}`
+          ) as Phaser.GameObjects.Shape | null;
+
+          if (!unitDisplay)
+            throw new Error(
+              "tried priming a unit to move, but unit's game object is null"
+            );
+
           this.store.dispatch(
             ControlActions.moveUnit({
               unitId: unit.id,
@@ -344,7 +353,13 @@ export class InitialScene extends Phaser.Scene {
 
         const unitDisplay = this.children.getByName(
           `unit-${unitId}`
-        )! as Phaser.GameObjects.Shape;
+        ) as Phaser.GameObjects.Shape | null;
+
+        if (!unitDisplay)
+          throw new Error(
+            "tried moving a unit but associated game object is null"
+          );
+
         unitDisplay.setPosition(
           unit.pendingPosition.x * this.tileWidth,
           unit.pendingPosition.y * this.tileHeight
