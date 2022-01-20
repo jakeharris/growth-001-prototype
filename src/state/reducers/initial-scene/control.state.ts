@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Positioned, Unit } from "../../../models";
+import { Positioned } from "../../../models";
 import { clamp } from "../../../util";
 
 export interface State {
@@ -32,6 +32,10 @@ export const slice = createSlice({
       ...state,
       selectedUnitId: action.payload,
     }),
+    cancelSelectUnit: (state) => ({
+      ...state,
+      selectedUnit: null,
+    }),
     moveCursor: (state, action) => {
       const { x, y } = action.payload;
       return {
@@ -52,6 +56,11 @@ export const slice = createSlice({
     }),
     confirmMoveUnit: (state, action: PayloadAction<{ unitId: string }>) => ({
       ...state,
+      movingUnitId: null,
+    }),
+    cancelMoveUnit: (state) => ({
+      ...state,
+      selectedUnit: state.movingUnitId,
       movingUnitId: null,
     }),
   },

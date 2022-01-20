@@ -345,6 +345,20 @@ export class InitialScene extends Phaser.Scene {
         this.store.dispatch(ControlActions.confirmMoveUnit({ unitId }));
       }
     });
+
+    this.input.keyboard.on("keyboard-X", () => {
+      const isSelecting = selectIsSelectingUnit(this.store.getState());
+      const isMoving = selectIsMoving(this.store.getState());
+
+      if (isSelecting) {
+        this.store.dispatch(ControlActions.cancelSelectUnit());
+        this.clearSelect();
+      }
+      if (isMoving) {
+        this.store.dispatch(ControlActions.cancelMoveUnit());
+        this.clearMove();
+      }
+    });
   }
 
   cursorHasMoved(newCursorPosition: Positioned) {
