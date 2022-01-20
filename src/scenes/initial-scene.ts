@@ -346,7 +346,7 @@ export class InitialScene extends Phaser.Scene {
       }
     });
 
-    this.input.keyboard.on("keyboard-X", () => {
+    this.input.keyboard.on("keydown-X", () => {
       const isSelecting = selectIsSelectingUnit(this.store.getState());
       const isMoving = selectIsMoving(this.store.getState());
 

@@ -34,7 +34,7 @@ export const slice = createSlice({
     }),
     cancelSelectUnit: (state) => ({
       ...state,
-      selectedUnit: null,
+      selectedUnitId: null,
     }),
     moveCursor: (state, action) => {
       const { x, y } = action.payload;
