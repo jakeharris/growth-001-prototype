@@ -19,7 +19,6 @@ export interface Unit {
 
   hasMoved: boolean;
 
-  destinationTiles: string[]; // the IDs of all tiles that this unit can move to
   pendingPosition: { x: number; y: number } | null; // the position that this unit is moving to
 }
 
@@ -68,7 +67,6 @@ export function createUnit(updates?: Partial<Unit>): Unit {
 
     hasMoved: false,
 
-    destinationTiles: [],
     pendingPosition: null,
 
     ...updates,
@@ -105,15 +103,6 @@ export function createRandomBasicUnit(
     team,
     ...updates,
   });
-
-  const destinationTiles = getDestinationTileIds(
-    unit,
-    mapWidth,
-    mapHeight,
-    mapTiles
-  );
-
-  unit.destinationTiles = destinationTiles;
 
   return unit;
 }

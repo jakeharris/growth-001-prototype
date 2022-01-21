@@ -47,7 +47,6 @@ const slice = createSlice({
           y: unit.pendingPosition.y,
           pendingPosition: null,
           hasMoved: true,
-          destinationTiles: [],
         },
       });
     });

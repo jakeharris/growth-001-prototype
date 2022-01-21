@@ -69,6 +69,8 @@ export const slice = createSlice({
 export const { actions, reducer } = slice;
 
 export const selectCursorPosition = (state: State) => state.cursorPosition;
+export const selectMapWidth = (state: State) => state.width;
+export const selectMapHeight = (state: State) => state.height;
 export const selectSelectedUnitId = (state: State) => state.selectedUnitId;
 export const selectIsSelectingUnit = (state: State) =>
   state.selectedUnitId !== null;

@@ -2,7 +2,7 @@ import { createSelector } from "@reduxjs/toolkit";
 import * as MapState from "./map.state";
 import * as UnitsState from "./units.state";
 import * as ControlState from "./control.state";
-import { getTileId } from "../../../models";
+import { getDestinationTileIds, getTileId } from "../../../models";
 
 export type State = {
   map: MapState.State;
@@ -52,6 +52,14 @@ export const selectCursorPosition = createSelector(
   selectControlState,
   ControlState.selectCursorPosition
 );
+export const selectMapWidth = createSelector(
+  selectControlState,
+  ControlState.selectMapWidth
+);
+export const selectMapHeight = createSelector(
+  selectControlState,
+  ControlState.selectMapHeight
+);
 export const selectHoveredUnit = createSelector(
   selectUnits,
   selectCursorPosition,
@@ -59,6 +67,14 @@ export const selectHoveredUnit = createSelector(
     units.find(
       (unit) => unit.x === cursorPosition.x && unit.y === cursorPosition.y
     )
+);
+export const selectHoveredUnitMovementTileIds = createSelector(
+  selectHoveredUnit,
+  selectMapWidth,
+  selectMapHeight,
+  selectMapTilesEntities,
+  (unit, width, height, mapTiles) =>
+    unit ? getDestinationTileIds(unit, width, height, mapTiles) : []
 );
 export const selectIsHoveringUnit = createSelector(
   selectHoveredUnit,
@@ -72,6 +88,18 @@ export const selectSelectedUnit = createSelector(
   selectSelectedUnitId,
   selectUnits,
   (selectedUnitId, units) => units.find((unit) => unit.id === selectedUnitId)
+);
+/**
+ * @todo Should we just determine the selected unit's movement range?
+ * Or should we calculate them all at once and return user viewmodels?
+ */
+export const selectSelectedUnitMovementTileIds = createSelector(
+  selectSelectedUnit,
+  selectMapWidth,
+  selectMapHeight,
+  selectMapTilesEntities,
+  (unit, width, height, mapTiles) =>
+    unit ? getDestinationTileIds(unit, width, height, mapTiles) : []
 );
 export const selectIsSelectingUnit = createSelector(
   selectControlState,
@@ -87,11 +115,12 @@ export const selectIsCursorOnValidDestinationTile = createSelector(
   selectUnits,
   selectDestinationTile,
   selectSelectedUnit,
-  (units, destinationTile, selectedUnit) => {
+  selectSelectedUnitMovementTileIds,
+  (units, destinationTile, selectedUnit, selectedUnitMovementTileIds) => {
     if (!selectedUnit) return false;
     if (!destinationTile) return false;
 
-    const isDestinationTileWithinRange = selectedUnit.destinationTiles.some(
+    const isDestinationTileWithinRange = selectedUnitMovementTileIds.some(
       (destinationTileId) => destinationTileId === destinationTile.id
     );
 
@@ -117,6 +146,14 @@ export const selectMovingUnit = createSelector(
   selectUnits,
   selectMovingUnitId,
   (units, movingUnitId) => units.find((unit) => unit.id === movingUnitId)
+);
+export const selectMovingUnitMovementTileIds = createSelector(
+  selectMovingUnit,
+  selectMapWidth,
+  selectMapHeight,
+  selectMapTilesEntities,
+  (unit, width, height, mapTiles) =>
+    unit ? getDestinationTileIds(unit, width, height, mapTiles) : []
 );
 export const selectPreviousUnitPosition = createSelector(
   selectMovingUnit,

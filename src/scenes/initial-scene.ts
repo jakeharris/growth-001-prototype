@@ -26,6 +26,9 @@ import {
   selectIsMoving,
   selectMovingUnit,
   selectMovingUnitId,
+  selectSelectedUnitMovementTileIds,
+  selectHoveredUnitMovementTileIds,
+  selectMovingUnitMovementTileIds,
 } from "../state/reducers/initial-scene";
 import { actions as MapActions } from "../state/reducers/initial-scene/map.state";
 import { actions as UnitsActions } from "../state/reducers/initial-scene/units.state";
@@ -405,14 +408,14 @@ export class InitialScene extends Phaser.Scene {
    */
   renderMovementRange(
     unit: Unit,
+    destinationTileIds: string[],
     mapTiles: Dictionary<Tile>
   ): Phaser.GameObjects.Group {
-    const { destinationTiles: destinationTilesIds } = unit;
     const movementTilesGroup = this.add
       .group()
       .setName(`unit-${unit.id}-movement`);
 
-    destinationTilesIds.forEach((tileId) => {
+    destinationTileIds.forEach((tileId) => {
       const tile = mapTiles[tileId];
 
       if (!tile) return;
@@ -441,10 +444,10 @@ export class InitialScene extends Phaser.Scene {
    */
   renderPendingMovement(
     unit: Unit,
+    destinationTileIds: string[],
     mapTiles: Dictionary<Tile>
   ): Phaser.GameObjects.Group {
-    console.log(unit);
-    const group = this.renderMovementRange(unit, mapTiles);
+    const group = this.renderMovementRange(unit, destinationTileIds, mapTiles);
 
     if (!unit.pendingPosition) throw Error("Unit has no pending position");
 
@@ -473,9 +476,13 @@ export class InitialScene extends Phaser.Scene {
     if (this.cursor) this.cursor.fillColor = 0xdddd00;
     const mapTiles = selectMapTilesEntities(this.store.getState());
     const selectedUnit = selectSelectedUnit(this.store.getState());
+    const selectedUnitMovementTileIds = selectSelectedUnitMovementTileIds(
+      this.store.getState()
+    );
     console.log(`Selected unit:`, selectedUnit);
     this.selectedUnitMovementTilesGroup = this.renderMovementRange(
       selectedUnit!,
+      selectedUnitMovementTileIds,
       mapTiles
     );
     this.hasRenderedSelectedUnit = true;
@@ -490,9 +497,13 @@ export class InitialScene extends Phaser.Scene {
   renderHover() {
     const mapTiles = selectMapTilesEntities(this.store.getState());
     const hoveredUnit = selectHoveredUnit(this.store.getState());
+    const hoveredUnitMovementTileIds = selectHoveredUnitMovementTileIds(
+      this.store.getState()
+    );
     console.log(`Hovered unit:`, hoveredUnit);
     this.hoveredUnitMovementTilesGroup = this.renderMovementRange(
       hoveredUnit!,
+      hoveredUnitMovementTileIds,
       mapTiles
     );
     this.hasRenderedHoveredUnit = true;
@@ -500,9 +511,16 @@ export class InitialScene extends Phaser.Scene {
 
   renderMove() {
     const movingUnit = selectMovingUnit(this.store.getState());
+    const movingUnitMovementTileIds = selectMovingUnitMovementTileIds(
+      this.store.getState()
+    );
     const mapTiles = selectMapTilesEntities(this.store.getState());
     console.log(`Moving unit:`, movingUnit);
-    this.movingUnitGroup = this.renderPendingMovement(movingUnit!, mapTiles);
+    this.movingUnitGroup = this.renderPendingMovement(
+      movingUnit!,
+      movingUnitMovementTileIds,
+      mapTiles
+    );
     this.hasRenderedMovingUnit = true;
   }
 
