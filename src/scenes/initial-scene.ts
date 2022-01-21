@@ -36,8 +36,8 @@ import { actions as ControlActions } from "../state/reducers/initial-scene/contr
 
 const enum Depth {
   Tiles = 0,
-  Units = 5,
-  Cursor = 10,
+  Cursor = 5,
+  Units = 10,
 }
 
 export class InitialScene extends Phaser.Scene {
@@ -461,7 +461,7 @@ export class InitialScene extends Phaser.Scene {
     );
     newPosition.setName(`unit-${unit.id}-pending-position`);
     newPosition.setAlpha(0.7);
-    newPosition.setDepth(Depth.Cursor + 1);
+    newPosition.setDepth(Depth.Units);
     newPosition.setOrigin(0, 0);
 
     group.add(newPosition);
