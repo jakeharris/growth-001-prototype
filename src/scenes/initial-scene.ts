@@ -100,7 +100,9 @@ export class InitialScene extends Phaser.Scene {
      * @todo Candidate for epic?
      */
     if (!this.hasRenderedHoveredUnit && isHovering) {
-      this.renderHover();
+      const hoveredUnit = selectHoveredUnit(this.store.getState());
+
+      if (!hoveredUnit?.hasMoved) this.renderHover();
     }
 
     /**
