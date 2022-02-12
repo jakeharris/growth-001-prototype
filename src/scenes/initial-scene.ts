@@ -1,7 +1,7 @@
 import { Dictionary, Store } from "@reduxjs/toolkit";
 import {
   haveSamePosition,
-  Positioned,
+  Position,
   createTile,
   Tile,
   getTeamColor,
@@ -49,7 +49,7 @@ export class InitialScene extends Phaser.Scene {
 
   cursor: Phaser.GameObjects.Rectangle | null = null;
 
-  cursorPosition: Positioned = { x: 0, y: 0 };
+  cursorPosition: Position = { x: 0, y: 0 };
 
   hasRenderedHoveredUnit = false;
   renderedHoveredUnit: Unit | null = null;
@@ -395,7 +395,7 @@ export class InitialScene extends Phaser.Scene {
     });
   }
 
-  cursorHasMoved(newCursorPosition: Positioned) {
+  cursorHasMoved(newCursorPosition: Position) {
     return (
       newCursorPosition &&
       this.cursorPosition &&

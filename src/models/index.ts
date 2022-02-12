@@ -1,4 +1,4 @@
 export * from "./consts";
-export * from "./positioned";
+export * from "./position";
 export * from "./tile";
 export * from "./unit";

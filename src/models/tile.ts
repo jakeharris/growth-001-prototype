@@ -1,6 +1,6 @@
-import { Positioned } from "./positioned";
+import { Position } from "./position";
 
-export interface Tile extends Positioned {
+export interface Tile extends Position {
   id: string; // the id, which is also the name of the Phaser rect or image that this Tile represents
   name: string;
   traversable: boolean;

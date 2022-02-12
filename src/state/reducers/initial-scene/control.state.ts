@@ -1,12 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Positioned } from "../../../models";
+import { Position } from "../../../models";
 import { clamp } from "../../../util";
 
 export interface State {
   width: number; // in tiles
   height: number; // in tiles
 
-  cursorPosition: Positioned;
+  cursorPosition: Position;
   selectedUnitId: string | null;
   movingUnitId: string | null;
 }
