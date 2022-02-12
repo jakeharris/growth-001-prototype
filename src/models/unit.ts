@@ -154,7 +154,7 @@ export function createRandomInitialUnits(
  * @param unit The unit to get the destination tiles for
  * @returns an array of the ids of all tiles that are within the unit's range
  */
-export function getDestinationTileIds(
+export function getMovementRangeTileIds(
   unit: Unit,
   mapWidth: number,
   mapHeight: number,

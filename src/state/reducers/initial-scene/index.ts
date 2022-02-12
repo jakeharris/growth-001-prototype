@@ -76,7 +76,7 @@ export const selectHoveredUnitMovementTileIds = createSelector(
   selectMapHeight,
   selectMapTilesEntities,
   (unit, width, height, mapTiles) =>
-    unit ? getDestinationTileIds(unit, width, height, mapTiles) : []
+    unit ? getMovementRangeTileIds(unit, width, height, mapTiles) : []
 );
 export const selectIsHoveringUnit = createSelector(
   selectHoveredUnit,
@@ -101,7 +101,7 @@ export const selectSelectedUnitMovementTileIds = createSelector(
   selectMapHeight,
   selectMapTilesEntities,
   (unit, width, height, mapTiles) =>
-    unit ? getDestinationTileIds(unit, width, height, mapTiles) : []
+    unit ? getMovementRangeTileIds(unit, width, height, mapTiles) : []
 );
 export const selectIsSelectingUnit = createSelector(
   selectControlState,
