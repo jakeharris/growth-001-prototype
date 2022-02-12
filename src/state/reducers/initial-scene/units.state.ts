@@ -43,8 +43,7 @@ const slice = createSlice({
       return adapter.updateOne(state, {
         id: unitId,
         changes: {
-          x: unit.pendingPosition.x,
-          y: unit.pendingPosition.y,
+          position: unit.pendingPosition,
           pendingPosition: null,
           hasMoved: true,
         },

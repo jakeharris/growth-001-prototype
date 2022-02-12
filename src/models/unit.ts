@@ -1,12 +1,21 @@
 import { Dictionary } from "@reduxjs/toolkit";
+import { Position } from ".";
 import { Tile, getTileId } from "./tile";
 
 export interface Unit {
   id: string;
 
   name: string;
-  x: number;
-  y: number;
+  /**
+   * The position of the unit, in grid units. This represents the top-leftmost
+   * corner of the smallest rectangle that contains the unit.
+   */
+  position: Position;
+  /**
+   * The positions of the tiles that this unit occupies,
+   * relative to the position of the unit, in grid units.
+   */
+  bodyPositions: Position[];
 
   team: Team;
 
@@ -19,7 +28,7 @@ export interface Unit {
 
   hasMoved: boolean;
 
-  pendingPosition: { x: number; y: number } | null; // the position that this unit is moving to
+  pendingPosition: Position | null; // the position that this unit is moving to
 }
 
 export enum Team {
@@ -54,8 +63,8 @@ export function createUnit(updates?: Partial<Unit>): Unit {
   return {
     id: Math.random() * 1e16 + "",
     name: "Absolute Unit",
-    x: 0,
-    y: 0,
+    position: { x: 0, y: 0 },
+    bodyPositions: [{ x: 0, y: 0 }],
     team: Team.Player,
 
     hp: 10,
@@ -98,8 +107,8 @@ export function createRandomBasicUnit(
       : Team.Other;
 
   const unit = createUnit({
-    x,
-    y,
+    position: { x, y },
+    bodyPositions: [{ x, y }],
     team,
     ...updates,
   });
@@ -152,12 +161,21 @@ export function getDestinationTileIds(
   mapTiles: Dictionary<Tile>
 ): string[] {
   const destinationTiles: string[] = [];
-  for (let x = unit.x - unit.range; x <= unit.x + unit.range; x++) {
-    for (let y = unit.y - unit.range; y <= unit.y + unit.range; y++) {
+  for (
+    let x = unit.position.x - unit.range;
+    x <= unit.position.x + unit.range;
+    x++
+  ) {
+    for (
+      let y = unit.position.y - unit.range;
+      y <= unit.position.y + unit.range;
+      y++
+    ) {
       const tile = mapTiles[getTileId(x, y)];
       const isWithinBounds = x >= 0 && x < mapWidth && y >= 0 && y < mapHeight;
       const isWithinStraightLineRange =
-        Math.abs(x - unit.x) + Math.abs(y - unit.y) <= unit.range;
+        Math.abs(x - unit.position.x) + Math.abs(y - unit.position.y) <=
+        unit.range;
 
       if (isWithinBounds && isWithinStraightLineRange && tile?.traversable) {
         destinationTiles.push(tile.id);
@@ -165,4 +183,20 @@ export function getDestinationTileIds(
     }
   }
   return destinationTiles;
+}
+
+/**
+ *
+ * @param unit The unit to get absolute body positions for
+ * @returns A list of absolute grid positions, that describes the tiles that the unit occupies
+ */
+export function getAbsoluteBodyPositions(unit: Unit): Position[] {
+  const positions = [];
+  for (const bodyPosition of unit.bodyPositions) {
+    positions.push({
+      x: unit.position.x + bodyPosition.x,
+      y: unit.position.y + bodyPosition.y,
+    });
+  }
+  return positions;
 }

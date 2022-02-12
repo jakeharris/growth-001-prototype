@@ -213,16 +213,18 @@ export class InitialScene extends Phaser.Scene {
     const units = createRandomInitialUnits(3, this.width, this.height, map);
 
     units.forEach((unit) => {
-      const circle = this.add.circle(
-        unit.x * this.tileWidth,
-        unit.y * this.tileHeight,
-        this.tileWidth / 2,
-        getTeamColor(unit.team)
-      );
-      circle.setDepth(Depth.Units);
-      circle.setOrigin(0, 0);
-      circle.setName(`unit-${unit.id}`);
-      circle.setInteractive();
+      unit.bodyPositions.forEach((position) => {
+        const circle = this.add.circle(
+          position.x * this.tileWidth,
+          position.y * this.tileHeight,
+          this.tileWidth / 2,
+          getTeamColor(unit.team)
+        );
+        circle.setDepth(Depth.Units);
+        circle.setOrigin(0, 0);
+        circle.setName(`unit-${unit.id}-body-${position.x}-${position.y}`);
+        circle.setInteractive();
+      });
     });
 
     this.store.dispatch(UnitsActions.createUnits({ units }));
@@ -322,7 +324,7 @@ export class InitialScene extends Phaser.Scene {
           console.log("valid!");
 
           const unitDisplay = this.children.getByName(
-            `unit-${unit.id}`
+            `unit-${unit.id}-body-${unit.position.x}-${unit.position.y}`
           ) as Phaser.GameObjects.Shape | null;
 
           if (!unitDisplay)
@@ -362,7 +364,7 @@ export class InitialScene extends Phaser.Scene {
           );
 
         const unitDisplay = this.children.getByName(
-          `unit-${unitId}`
+          `unit-${unitId}-body-${unit.position.x}-${unit.position.y}`
         ) as Phaser.GameObjects.Shape | null;
 
         if (!unitDisplay)

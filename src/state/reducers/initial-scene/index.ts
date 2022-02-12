@@ -65,7 +65,9 @@ export const selectHoveredUnit = createSelector(
   selectCursorPosition,
   (units, cursorPosition) =>
     units.find(
-      (unit) => unit.x === cursorPosition.x && unit.y === cursorPosition.y
+      (unit) =>
+        unit.position.x === cursorPosition.x &&
+        unit.position.y === cursorPosition.y
     )
 );
 export const selectHoveredUnitMovementTileIds = createSelector(
@@ -130,7 +132,10 @@ export const selectIsCursorOnValidDestinationTile = createSelector(
     return units.every((unit) => {
       if (unit === selectedUnit) return true;
 
-      return unit.x !== destinationTile.x || unit.y !== destinationTile.y;
+      return (
+        unit.position.x !== destinationTile.x ||
+        unit.position.y !== destinationTile.y
+      );
     });
   }
 );
@@ -157,5 +162,5 @@ export const selectMovingUnitMovementTileIds = createSelector(
 );
 export const selectPreviousUnitPosition = createSelector(
   selectMovingUnit,
-  (movingUnit) => (movingUnit ? { x: movingUnit.x, y: movingUnit.y } : null)
+  (movingUnit) => (movingUnit ? movingUnit.position : null)
 );
