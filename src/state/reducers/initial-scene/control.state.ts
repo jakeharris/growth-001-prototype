@@ -7,6 +7,7 @@ export interface State {
   height: number; // in tiles
 
   cursorPosition: Position;
+  moveSourcePosition: Position | null;
   selectedUnitId: string | null;
   movingUnitId: string | null;
 }
@@ -15,6 +16,7 @@ export const initialState: State = {
   width: 0,
   height: 0,
   cursorPosition: { x: 0, y: 0 },
+  moveSourcePosition: null,
   selectedUnitId: null,
   movingUnitId: null,
 };
@@ -31,10 +33,12 @@ export const slice = createSlice({
     selectUnit: (state, action: PayloadAction<string>) => ({
       ...state,
       selectedUnitId: action.payload,
+      moveSourcePosition: state.cursorPosition,
     }),
     cancelSelectUnit: (state) => ({
       ...state,
       selectedUnitId: null,
+      moveSourcePosition: null,
     }),
     moveCursor: (state, action) => {
       const { x, y } = action.payload;
@@ -57,6 +61,7 @@ export const slice = createSlice({
     confirmMoveUnit: (state, action: PayloadAction<{ unitId: string }>) => ({
       ...state,
       movingUnitId: null,
+      moveSourcePosition: null,
     }),
     cancelMoveUnit: (state) => ({
       ...state,
@@ -69,6 +74,8 @@ export const slice = createSlice({
 export const { actions, reducer } = slice;
 
 export const selectCursorPosition = (state: State) => state.cursorPosition;
+export const selectMoveSourcePosition = (state: State) =>
+  state.moveSourcePosition;
 export const selectMapWidth = (state: State) => state.width;
 export const selectMapHeight = (state: State) => state.height;
 export const selectSelectedUnitId = (state: State) => state.selectedUnitId;

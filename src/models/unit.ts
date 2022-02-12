@@ -188,15 +188,27 @@ export function getMovementRangeTileIds(
 /**
  *
  * @param unit The unit to get absolute body positions for
- * @returns A list of absolute grid positions, that describes the tiles that the unit occupies
+ * @returns A list of absolute grid positions that describes the tiles that the unit occupies
  */
 export function getAbsoluteBodyPositions(unit: Unit): Position[] {
-  const positions = [];
-  for (const bodyPosition of unit.bodyPositions) {
-    positions.push({
-      x: unit.position.x + bodyPosition.x,
-      y: unit.position.y + bodyPosition.y,
-    });
-  }
-  return positions;
+  return unit.bodyPositions.map((position) => ({
+    x: position.x + unit.position.x,
+    y: position.y + unit.position.y,
+  }));
+}
+
+/**
+ *
+ * @param unit The unit to get absolute body positions for
+ * @param movementDelta The movement delta to apply to the unit's position
+ * @returns A list of absolute grid positions that describes the tiles that the unit will occupy if it moves
+ */
+export function getAbsoluteDestinationPositions(
+  unit: Unit,
+  movementDelta: Position
+): Position[] {
+  return unit.bodyPositions.map((position) => ({
+    x: unit.position.x + position.x + movementDelta.x,
+    y: unit.position.y + position.y + movementDelta.y,
+  }));
 }

@@ -2,7 +2,13 @@ import { createSelector } from "@reduxjs/toolkit";
 import * as MapState from "./map.state";
 import * as UnitsState from "./units.state";
 import * as ControlState from "./control.state";
-import { getDestinationTileIds, getTileId } from "../../../models";
+import {
+  getAbsoluteBodyPositions,
+  getAbsoluteDestinationPositions,
+  getMovementRangeTileIds,
+  getTileId,
+  haveSamePosition,
+} from "../../../models";
 
 export type State = {
   map: MapState.State;
@@ -107,35 +113,67 @@ export const selectIsSelectingUnit = createSelector(
   selectControlState,
   ControlState.selectIsSelectingUnit
 );
-export const selectDestinationTile = createSelector(
-  selectCursorPosition,
-  selectMapTilesEntities,
-  (cursorPosition, mapTiles) =>
-    mapTiles[getTileId(cursorPosition.x, cursorPosition.y)]
+export const selectMoveSourcePosition = createSelector(
+  selectControlState,
+  ControlState.selectMoveSourcePosition
 );
+export const selectMovementDelta = createSelector(
+  selectMoveSourcePosition,
+  selectCursorPosition,
+  (sourcePosition, cursorPosition) => {
+    if (!sourcePosition) {
+      return { x: 0, y: 0 };
+    }
+
+    return {
+      x: cursorPosition.x - sourcePosition.x,
+      y: cursorPosition.y - sourcePosition.y,
+    };
+  }
+);
+
 export const selectIsCursorOnValidDestinationTile = createSelector(
   selectUnits,
-  selectDestinationTile,
+  selectMovementDelta,
   selectSelectedUnit,
-  selectSelectedUnitMovementTileIds,
-  (units, destinationTile, selectedUnit, selectedUnitMovementTileIds) => {
+  selectMapTilesEntities,
+  (units, movementDelta, selectedUnit, mapTiles) => {
     if (!selectedUnit) return false;
-    if (!destinationTile) return false;
+    if (movementDelta.x === 0 && movementDelta.y === 0) return false;
 
-    const isDestinationTileWithinRange = selectedUnitMovementTileIds.some(
-      (destinationTileId) => destinationTileId === destinationTile.id
+    const destinationPositions = getAbsoluteDestinationPositions(
+      selectedUnit,
+      movementDelta
     );
 
+    const isDestinationTileWithinRange =
+      Math.abs(movementDelta.x) + Math.abs(movementDelta.y) <=
+      selectedUnit.range;
+
     if (!isDestinationTileWithinRange) return false;
-    if (!destinationTile.traversable) return false;
 
-    return units.every((unit) => {
-      if (unit === selectedUnit) return true;
+    // for each destination position, check if there is another unit already there, and whether or not it is traversable
+    return destinationPositions.every((destinationPosition) => {
+      const tile =
+        mapTiles[getTileId(destinationPosition.x, destinationPosition.y)];
 
-      return (
-        unit.position.x !== destinationTile.x ||
-        unit.position.y !== destinationTile.y
-      );
+      if (!tile) return false;
+      if (!tile.traversable) return false;
+
+      // check if there is another unit already there
+      // pseudo-code:
+      // ask each unit for all positions it consumes (absolute body positions)
+      // if any unit consumes the destination position, return false
+      /**
+       * @todo This could stand some optimization.
+       */
+      return units.every((unit) => {
+        const absoluteBodyPositions = getAbsoluteBodyPositions(unit);
+
+        return !absoluteBodyPositions.some((absoluteBodyPosition) => {
+          return haveSamePosition(absoluteBodyPosition, destinationPosition);
+        });
+      });
     });
   }
 );
@@ -158,7 +196,7 @@ export const selectMovingUnitMovementTileIds = createSelector(
   selectMapHeight,
   selectMapTilesEntities,
   (unit, width, height, mapTiles) =>
-    unit ? getDestinationTileIds(unit, width, height, mapTiles) : []
+    unit ? getMovementRangeTileIds(unit, width, height, mapTiles) : []
 );
 export const selectPreviousUnitPosition = createSelector(
   selectMovingUnit,

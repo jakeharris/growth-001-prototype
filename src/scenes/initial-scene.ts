@@ -22,7 +22,6 @@ import {
   selectIsSelectingUnit,
   selectIsCursorOnValidDestinationTile,
   selectSelectedUnit,
-  selectDestinationTile,
   selectIsMoving,
   selectMovingUnit,
   selectMovingUnitId,
@@ -184,9 +183,9 @@ export class InitialScene extends Phaser.Scene {
 
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
-        const random = Math.floor(Math.random() * 2);
-        const color = random === 0 ? 0x0023d8 : 0x00dd00;
-        const traversable = random === 1;
+        const random = Math.floor(Math.random() * 100);
+        const color = random >= 85 ? 0x0023d8 : 0x00dd00;
+        const traversable = random < 85;
         const id = getTileId(x, y);
 
         const rect = this.add.rectangle(
@@ -215,8 +214,8 @@ export class InitialScene extends Phaser.Scene {
     units.forEach((unit) => {
       unit.bodyPositions.forEach((position) => {
         const circle = this.add.circle(
-          position.x * this.tileWidth,
-          position.y * this.tileHeight,
+          (unit.position.x + position.x) * this.tileWidth,
+          (unit.position.y + position.y) * this.tileHeight,
           this.tileWidth / 2,
           getTeamColor(unit.team)
         );
@@ -319,18 +318,10 @@ export class InitialScene extends Phaser.Scene {
 
         if (isCursorOnValidDestinationTile) {
           const unit = selectSelectedUnit(this.store.getState())!;
-          const destinationTile = selectDestinationTile(this.store.getState())!;
-
-          console.log("valid!");
-
-          const unitDisplay = this.children.getByName(
-            `unit-${unit.id}-body-${unit.position.x}-${unit.position.y}`
-          ) as Phaser.GameObjects.Shape | null;
-
-          if (!unitDisplay)
-            throw new Error(
-              "tried priming a unit to move, but unit's game object is null"
-            );
+          const mapTiles = selectMapTilesEntities(this.store.getState());
+          const cursorPosition = selectCursorPosition(this.store.getState());
+          const destinationTile =
+            mapTiles[getTileId(cursorPosition.x, cursorPosition.y)]!;
 
           this.store.dispatch(
             ControlActions.moveUnit({
@@ -363,20 +354,31 @@ export class InitialScene extends Phaser.Scene {
             "tried moving a unit but unit.pendingPosition is null"
           );
 
-        const unitDisplay = this.children.getByName(
-          `unit-${unitId}-body-${unit.position.x}-${unit.position.y}`
-        ) as Phaser.GameObjects.Shape | null;
+        const unitSprites = unit.bodyPositions
+          .map(
+            (position) =>
+              this.children.getByName(
+                `unit-${unitId}-body-${position.x}-${position.y}`
+              ) as Phaser.GameObjects.Shape
+          )
+          .filter((sprite) => !!sprite);
 
-        if (!unitDisplay)
+        if (unitSprites.length === 0)
           throw new Error(
-            "tried moving a unit but associated game object is null"
+            "tried moving a unit but couldn't find sprites for unit"
+          );
+        if (unitSprites.length !== unit.bodyPositions.length)
+          throw new Error(
+            "tried moving a unit but didn't find all sprites for unit"
           );
 
-        unitDisplay.setPosition(
-          unit.pendingPosition.x * this.tileWidth,
-          unit.pendingPosition.y * this.tileHeight
-        );
-        unitDisplay.fillColor = Colors.TurnTaken;
+        unitSprites.forEach((sprite) => {
+          sprite.setPosition(
+            unit.pendingPosition!.x * this.tileWidth,
+            unit.pendingPosition!.y * this.tileHeight
+          );
+          sprite.fillColor = Colors.TurnTaken;
+        });
 
         this.store.dispatch(ControlActions.confirmMoveUnit({ unitId }));
       }
