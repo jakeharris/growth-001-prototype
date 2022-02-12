@@ -108,7 +108,7 @@ export function createRandomBasicUnit(
 
   const unit = createUnit({
     position: { x, y },
-    bodyPositions: [{ x, y }],
+    bodyPositions: [{ x: 0, y: 0 }],
     team,
     ...updates,
   });
