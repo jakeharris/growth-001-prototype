@@ -70,10 +70,10 @@ export const selectHoveredUnit = createSelector(
   selectUnits,
   selectCursorPosition,
   (units, cursorPosition) =>
-    units.find(
-      (unit) =>
-        unit.position.x === cursorPosition.x &&
-        unit.position.y === cursorPosition.y
+    units.find((unit) =>
+      getAbsoluteBodyPositions(unit).some((pos) =>
+        haveSamePosition(pos, cursorPosition)
+      )
     )
 );
 export const selectHoveredUnitMovementTileIds = createSelector(
