@@ -139,6 +139,10 @@ export function createRandomInitialUnits(
   units.push(
     createRandomBasicUnit(mapWidth, mapHeight, mapTiles, {
       team: Team.Player,
+      bodyPositions: [
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+      ],
     })
   );
   for (let i = 0; i < unitCount - 1; i++) {
