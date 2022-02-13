@@ -91,7 +91,7 @@ export function createRandomBasicUnit(
   let x = Math.floor(Math.random() * mapWidth);
   let y = Math.floor(Math.random() * mapHeight);
   // prevent spawning on a tile that is not traversable
-  while (!mapTiles[getTileId(x, y)]?.traversable) {
+  while (!mapTiles[getTileId({ x, y })]?.traversable) {
     x = Math.floor(Math.random() * mapWidth);
     y = Math.floor(Math.random() * mapHeight);
   }

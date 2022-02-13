@@ -154,8 +154,7 @@ export const selectIsCursorOnValidDestinationTile = createSelector(
 
     // for each destination position, check if there is another unit already there, and whether or not it is traversable
     return destinationPositions.every((destinationPosition) => {
-      const tile =
-        mapTiles[getTileId(destinationPosition.x, destinationPosition.y)];
+      const tile = mapTiles[getTileId(destinationPosition)];
 
       if (!tile) return false;
       if (!tile.traversable) return false;

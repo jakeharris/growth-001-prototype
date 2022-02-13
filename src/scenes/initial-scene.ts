@@ -186,7 +186,7 @@ export class InitialScene extends Phaser.Scene {
         const random = Math.floor(Math.random() * 100);
         const color = random >= 85 ? 0x0023d8 : 0x00dd00;
         const traversable = random < 85;
-        const id = getTileId(x, y);
+        const id = getTileId({ x, y });
 
         const rect = this.add.rectangle(
           x * this.tileWidth,
@@ -320,8 +320,7 @@ export class InitialScene extends Phaser.Scene {
           const unit = selectSelectedUnit(this.store.getState())!;
           const mapTiles = selectMapTilesEntities(this.store.getState());
           const cursorPosition = selectCursorPosition(this.store.getState());
-          const destinationTile =
-            mapTiles[getTileId(cursorPosition.x, cursorPosition.y)]!;
+          const destinationTile = mapTiles[getTileId(cursorPosition)]!;
 
           this.store.dispatch(
             ControlActions.moveUnit({

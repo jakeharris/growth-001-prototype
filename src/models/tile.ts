@@ -24,9 +24,8 @@ export function createTile(
 
 /**
  * Returns the id of this tile by generating it in a consistent way.
- * @param x The x-position of the tile, in tiles
- * @param y The y-position of the tile, in tiles
+ * @param position The position to find a tile ID for
  */
-export function getTileId(x: number, y: number): string {
-  return `tile-${x}-${y}`;
+export function getTileId(position: Position): string {
+  return `tile-${position.x}-${position.y}`;
 }
