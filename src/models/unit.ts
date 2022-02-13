@@ -1,5 +1,5 @@
 import { Dictionary } from "@reduxjs/toolkit";
-import { Position } from ".";
+import { addPositions, Position } from ".";
 import { Tile, getTileId } from "./tile";
 
 export interface Unit {
@@ -164,29 +164,120 @@ export function getMovementRangeTileIds(
   mapHeight: number,
   mapTiles: Dictionary<Tile>
 ): string[] {
-  const destinationTiles: string[] = [];
-  for (
-    let x = unit.position.x - unit.range;
-    x <= unit.position.x + unit.range;
-    x++
-  ) {
-    for (
-      let y = unit.position.y - unit.range;
-      y <= unit.position.y + unit.range;
-      y++
-    ) {
-      const tile = mapTiles[getTileId(x, y)];
-      const isWithinBounds = x >= 0 && x < mapWidth && y >= 0 && y < mapHeight;
-      const isWithinStraightLineRange =
-        Math.abs(x - unit.position.x) + Math.abs(y - unit.position.y) <=
-        unit.range;
+  /**
+   * @todo, probably -- optimize this
+   * @todo Add check for whether any bodyPosition would collide with another unit
+   */
 
-      if (isWithinBounds && isWithinStraightLineRange && tile?.traversable) {
-        destinationTiles.push(tile.id);
-      }
+  /**
+   * pseudocode:
+   * 1. determine all possible movement deltas for the unit
+   *    1a. note: consider movement range as well as every bodyPosition
+   * 2. for each movement delta:
+   *    2a. check traversability of each tile under the unit in this new configuration
+   *    2b. check that no bodyPosition would be out of bounds
+   * 3. for each valid delta, get the map tile at that position
+   * 4. return those map tiles
+   */
+
+  const movementDeltas = getMovementDeltasForUnit(unit);
+  const validDeltas = movementDeltas.filter((delta) =>
+    isValid(unit, delta, mapWidth, mapHeight, mapTiles)
+  );
+  const destinationTiles = validDeltas.map((delta) => {
+    const newPosition = addPositions(unit.position, delta);
+    return getTileId(newPosition);
+  });
+
+  return destinationTiles;
+}
+
+/**
+ * Helper function that generates all possible movement deltas for a given range.
+ * These are relative -- which means they'll be the same for each bodyPosition in the unit.
+ * Does not consider bounds or traversability -- just distance.
+ * @param range The maximum number of tiles away the unit can move
+ * @returns Relative movement deltas that can be applied to each bodyPosition to determine absolute movement positions
+ */
+function getMovementDeltasForRange(range: number): Position[] {
+  let movementDeltas: Position[] = [];
+
+  for (let x = -range; x <= range; x++) {
+    for (let y = -range; y <= range; y++) {
+      const isWithinStraightLineRange = Math.abs(x) + Math.abs(y) <= range;
+
+      if (!isWithinStraightLineRange) continue;
+
+      movementDeltas.push({ x, y });
     }
   }
-  return destinationTiles;
+
+  return movementDeltas;
+}
+
+/**
+ * Helper function that generates all possible movement deltas for a given unit.
+ * Does not consider bounds or traversability -- just distance
+ * @param unit The unit under consideration for movement
+ * @returns Movement deltas that can be applied
+ */
+function getMovementDeltasForUnit(unit: Unit): Position[] {
+  /**
+   * @todo Rename away from "relative," that's not really what's happening here.
+   */
+  const relativeMovementDeltas = getMovementDeltasForRange(unit.range);
+  const allMovementDeltas = unit.bodyPositions.flatMap((position) =>
+    applyDeltas(position, relativeMovementDeltas)
+  );
+  /**
+   * @todo De-dupe movement deltas?
+   */
+  // const dedupedMovementDeltas = dedupePositions(allMovementDeltas);
+
+  return allMovementDeltas;
+}
+
+function applyDeltas(position: Position, deltas: Position[]): Position[] {
+  return deltas.map((delta) => addPositions(position, delta));
+}
+
+function isValid(
+  unit: Unit,
+  delta: Position,
+  mapWidth: number,
+  mapHeight: number,
+  mapTiles: Dictionary<Tile>
+) {
+  return getAbsoluteBodyPositions(unit).every((bodyPosition) => {
+    const prospectiveBodyPosition = addPositions(bodyPosition, delta);
+    return (
+      isWithinBounds(prospectiveBodyPosition, mapWidth, mapHeight) &&
+      isTraversible(prospectiveBodyPosition, mapTiles)
+    );
+  });
+}
+
+function isWithinBounds(
+  position: Position,
+  mapWidth: number,
+  mapHeight: number
+): boolean {
+  return (
+    position.x >= 0 &&
+    position.x < mapWidth &&
+    position.y >= 0 &&
+    position.y < mapHeight
+  );
+}
+
+function isTraversible(
+  position: Position,
+  mapTiles: Dictionary<Tile>
+): boolean {
+  const tileId = getTileId(position);
+  const tile = mapTiles[tileId];
+
+  return !!tile && tile.traversable;
 }
 
 /**
