@@ -375,6 +375,11 @@ export class InitialScene extends Phaser.Scene {
             "tried moving a unit but didn't find all sprites for unit"
           );
 
+        /**
+         * @todo Don't stack each bodyPosition in the same spot! Use
+         * its, well, bodyPosition!
+         */
+
         unitSprites.forEach((sprite) => {
           sprite.setPosition(
             unit.pendingPosition!.x * this.tileWidth,
