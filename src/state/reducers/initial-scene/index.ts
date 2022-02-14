@@ -139,6 +139,10 @@ export const selectIsCursorOnValidDestinationTile = createSelector(
   selectMapTilesEntities,
   (units, movementDelta, selectedUnit, mapTiles) => {
     if (!selectedUnit) return false;
+    /**
+     * @todo Remove the 0,0 condition. A player should be able
+     * to wait, attack, etc. without moving.
+     */
     if (movementDelta.x === 0 && movementDelta.y === 0) return false;
 
     const destinationPositions = getDestinationPositions(
