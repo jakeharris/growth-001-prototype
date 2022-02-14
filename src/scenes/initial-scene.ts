@@ -212,6 +212,9 @@ export class InitialScene extends Phaser.Scene {
     const units = createRandomInitialUnits(3, this.width, this.height, map);
 
     units.forEach((unit) => {
+      const unitGroup = this.add.group();
+      unitGroup.setName(`unit-${unit.id}`);
+
       unit.bodyPositions.forEach((position) => {
         const circle = this.add.circle(
           (unit.position.x + position.x) * this.tileWidth,
@@ -223,6 +226,7 @@ export class InitialScene extends Phaser.Scene {
         circle.setOrigin(0, 0);
         circle.setName(`unit-${unit.id}-body-${position.x}-${position.y}`);
         circle.setInteractive();
+        unitGroup.add(circle);
       });
     });
 
