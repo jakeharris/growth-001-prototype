@@ -4,7 +4,7 @@ import * as UnitsState from "./units.state";
 import * as ControlState from "./control.state";
 import {
   getAbsoluteBodyPositions,
-  getAbsoluteDestinationPositions,
+  getDestinationPositions,
   getMovementRangeTileIds,
   getTileId,
   haveSamePosition,
@@ -141,7 +141,7 @@ export const selectIsCursorOnValidDestinationTile = createSelector(
     if (!selectedUnit) return false;
     if (movementDelta.x === 0 && movementDelta.y === 0) return false;
 
-    const destinationPositions = getAbsoluteDestinationPositions(
+    const destinationPositions = getDestinationPositions(
       selectedUnit,
       movementDelta
     );

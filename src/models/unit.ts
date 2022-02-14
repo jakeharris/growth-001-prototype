@@ -298,7 +298,7 @@ export function getAbsoluteBodyPositions(unit: Unit): Position[] {
  * @param movementDelta The movement delta to apply to the unit's position
  * @returns A list of absolute grid positions that describes the tiles that the unit will occupy if it moves
  */
-export function getAbsoluteDestinationPositions(
+export function getDestinationPositions(
   unit: Unit,
   movementDelta: Position
 ): Position[] {
