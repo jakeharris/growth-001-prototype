@@ -460,18 +460,20 @@ export class InitialScene extends Phaser.Scene {
 
     if (!unit.pendingPosition) throw Error("Unit has no pending position");
 
-    const newPosition = this.add.circle(
-      unit.pendingPosition.x * this.tileWidth,
-      unit.pendingPosition.y * this.tileHeight,
-      this.tileWidth / 2,
-      getTeamColor(unit.team)
-    );
-    newPosition.setName(`unit-${unit.id}-pending-position`);
-    newPosition.setAlpha(0.7);
-    newPosition.setDepth(Depth.Units);
-    newPosition.setOrigin(0, 0);
+    unit.bodyPositions.forEach((position) => {
+      const newPosition = this.add.circle(
+        (unit.pendingPosition!.x + position.x) * this.tileWidth,
+        (unit.pendingPosition!.y + position.y) * this.tileHeight,
+        this.tileWidth / 2,
+        getTeamColor(unit.team)
+      );
+      newPosition.setName(`unit-${unit.id}-pending-position`);
+      newPosition.setAlpha(0.7);
+      newPosition.setDepth(Depth.Units);
+      newPosition.setOrigin(0, 0);
+      group.add(newPosition);
+    });
 
-    group.add(newPosition);
     return group;
   }
 
