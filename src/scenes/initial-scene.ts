@@ -357,33 +357,19 @@ export class InitialScene extends Phaser.Scene {
             "tried moving a unit but unit.pendingPosition is null"
           );
 
-        const unitSprites = unit.bodyPositions
-          .map(
-            (position) =>
-              this.children.getByName(
-                `unit-${unitId}-body-${position.x}-${position.y}`
-              ) as Phaser.GameObjects.Shape
-          )
-          .filter((sprite) => !!sprite);
+        unit.bodyPositions.forEach((position) => {
+          const sprite = this.children.getByName(
+            `unit-${unitId}-body-${position.x}-${position.y}`
+          ) as Phaser.GameObjects.Shape;
 
-        if (unitSprites.length === 0)
-          throw new Error(
-            "tried moving a unit but couldn't find sprites for unit"
-          );
-        if (unitSprites.length !== unit.bodyPositions.length)
-          throw new Error(
-            "tried moving a unit but didn't find all sprites for unit"
-          );
+          if (!sprite)
+            throw new Error(
+              `tried moving a unit, but couldn\'t find sprite for body position (${position.x}, ${position.y})`
+            );
 
-        /**
-         * @todo Don't stack each bodyPosition in the same spot! Use
-         * its, well, bodyPosition!
-         */
-
-        unitSprites.forEach((sprite) => {
           sprite.setPosition(
-            unit.pendingPosition!.x * this.tileWidth,
-            unit.pendingPosition!.y * this.tileHeight
+            (unit.pendingPosition!.x + position.x) * this.tileWidth,
+            (unit.pendingPosition!.y + position.y) * this.tileHeight
           );
           sprite.fillColor = Colors.TurnTaken;
         });
