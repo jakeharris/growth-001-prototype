@@ -442,13 +442,8 @@ export class InitialScene extends Phaser.Scene {
    * @param unit The unit to display the movement for.
    * @param mapTiles The tiles of the current map.
    */
-  renderPendingMovement(
-    unit: Unit,
-    destinationTileIds: string[],
-    mapTiles: Dictionary<Tile>
-  ): Phaser.GameObjects.Group {
-    const group = this.renderMovementRange(unit, destinationTileIds, mapTiles);
-
+  renderPendingMovement(unit: Unit): Phaser.GameObjects.Group {
+    const group = this.add.group().setName(`unit-${unit.id}-pending`);
     if (!unit.pendingPosition) throw Error("Unit has no pending position");
 
     unit.bodyPositions.forEach((position) => {
@@ -518,11 +513,13 @@ export class InitialScene extends Phaser.Scene {
     );
     const mapTiles = selectMapTilesEntities(this.store.getState());
     console.log(`Moving unit:`, movingUnit);
-    this.movingUnitGroup = this.renderPendingMovement(
+    const movementRangeGroup = this.renderMovementRange(
       movingUnit!,
       movingUnitMovementTileIds,
       mapTiles
     );
+    this.movingUnitGroup = this.renderPendingMovement(movingUnit!);
+    this.movingUnitGroup.addMultiple(movementRangeGroup.getChildren());
     this.hasRenderedMovingUnit = true;
   }
 
