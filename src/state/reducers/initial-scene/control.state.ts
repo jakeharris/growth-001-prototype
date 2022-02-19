@@ -50,6 +50,10 @@ export const slice = createSlice({
         },
       };
     },
+    planMoveUnit: (
+      state,
+      _: PayloadAction<{ unitId: string; x: number; y: number }>
+    ) => state,
     moveUnit: (
       state,
       action: PayloadAction<{ unitId: string; x: number; y: number }>

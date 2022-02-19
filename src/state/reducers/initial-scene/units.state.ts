@@ -25,6 +25,34 @@ const slice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    builder.addCase(ControlActions.selectUnit, (state, action) => {
+      const unitId = action.payload;
+
+      const unit = state.entities[unitId];
+
+      if (!unit) return;
+
+      return adapter.updateOne(state, {
+        id: unitId,
+        changes: {
+          pendingPosition: unit.position,
+        },
+      });
+    });
+
+    builder.addCase(ControlActions.planMoveUnit, (state, action) => {
+      const { unitId, x, y } = action.payload;
+      const unit = selectEntities(state)[unitId];
+
+      if (!unit) return;
+      adapter.updateOne(state, {
+        id: unitId,
+        changes: {
+          pendingPosition: { x, y },
+        },
+      });
+    });
+
     builder.addCase(ControlActions.moveUnit, (state, action) => {
       const { unitId, x, y } = action.payload;
 
