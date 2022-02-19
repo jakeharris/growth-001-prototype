@@ -3,6 +3,7 @@ import { ofType, StateObservable } from "redux-observable";
 import { tap, Observable } from "rxjs";
 import { ignoreElements, withLatestFrom, map, filter } from "rxjs/operators";
 import {
+  selectCursorPosition,
   selectSelectedUnit,
   selectSelectedUnitId,
   State,
@@ -24,11 +25,8 @@ const planMove$ = (
     withLatestFrom(state$),
     filter(([_, initialScene]) => selectSelectedUnitId(initialScene) !== null),
     map(
-      ([action, initialScene]: [
-        PayloadAction<{ x: number; y: number }>,
-        State
-      ]) => {
-        const { x, y } = action.payload;
+      ([_, initialScene]: [PayloadAction<{ x: number; y: number }>, State]) => {
+        const { x, y } = selectCursorPosition(initialScene);
         const unit = selectSelectedUnit(initialScene);
 
         if (!unit) throw new Error("No unit selected");

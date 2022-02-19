@@ -54,8 +54,10 @@ export class InitialScene extends Phaser.Scene {
   renderedHoveredUnit: Unit | null = null;
   hoveredUnitMovementTilesGroup: Phaser.GameObjects.Group | null = null;
 
-  hasRenderedSelectedUnit = false;
+  hasRenderedSelectedUnitPendingMovement = false;
+  hasRenderedSelectedUnitMovementRange = false;
   renderedSelectedUnit: Unit | null = null;
+  selectedUnitPendingMovementGroup: Phaser.GameObjects.Group | null = null;
   selectedUnitMovementTilesGroup: Phaser.GameObjects.Group | null = null;
 
   hasRenderedMovingUnit = false;
@@ -95,6 +97,16 @@ export class InitialScene extends Phaser.Scene {
     const isSelecting = selectIsSelectingUnit(this.store.getState());
     const isMoving = selectIsMoving(this.store.getState());
 
+    const selectedUnit = selectSelectedUnit(this.store.getState());
+    if (
+      isSelecting &&
+      selectedUnit &&
+      haveSamePosition(selectedUnit.pendingPosition!, newCursorPosition) &&
+      !haveSamePosition(selectedUnit.position, selectedUnit.pendingPosition!)
+    ) {
+      this.hasRenderedSelectedUnitPendingMovement = false;
+    }
+
     /**
      * @todo Candidate for epic?
      */
@@ -114,14 +126,22 @@ export class InitialScene extends Phaser.Scene {
     /**
      * @todo Candidate for epic?
      */
-    if (!this.hasRenderedSelectedUnit && isSelecting) {
+    if (!this.hasRenderedSelectedUnitMovementRange && isSelecting) {
+      this.renderSelect();
+    }
+
+    if (!this.hasRenderedSelectedUnitPendingMovement && isSelecting) {
       this.renderSelect();
     }
 
     /**
      * @todo Candidate for epic?
      */
-    if (this.hasRenderedSelectedUnit && !isSelecting) {
+    if (
+      (this.hasRenderedSelectedUnitMovementRange ||
+        this.hasRenderedSelectedUnitPendingMovement) &&
+      !isSelecting
+    ) {
       this.clearSelect();
     }
 
@@ -466,7 +486,10 @@ export class InitialScene extends Phaser.Scene {
   clearSelect() {
     this.selectedUnitMovementTilesGroup?.destroy(true, true);
     this.selectedUnitMovementTilesGroup = null;
-    this.hasRenderedSelectedUnit = false;
+    this.selectedUnitPendingMovementGroup?.destroy(true, true);
+    this.selectedUnitPendingMovementGroup = null;
+    this.hasRenderedSelectedUnitMovementRange = false;
+    this.hasRenderedSelectedUnitPendingMovement = false;
   }
 
   renderSelect() {
@@ -477,12 +500,27 @@ export class InitialScene extends Phaser.Scene {
       this.store.getState()
     );
     console.log(`Selected unit:`, selectedUnit);
-    this.selectedUnitMovementTilesGroup = this.renderMovementRange(
-      selectedUnit!,
-      selectedUnitMovementTileIds,
-      mapTiles
-    );
-    this.hasRenderedSelectedUnit = true;
+    if (!selectedUnit)
+      throw new Error(
+        "tried to render selected unit, but selectedUnit is not defined"
+      );
+
+    if (!this.hasRenderedSelectedUnitMovementRange) {
+      this.selectedUnitMovementTilesGroup = this.renderMovementRange(
+        selectedUnit!,
+        selectedUnitMovementTileIds,
+        mapTiles
+      );
+      this.hasRenderedSelectedUnitMovementRange = true;
+    }
+
+    if (!this.hasRenderedSelectedUnitPendingMovement) {
+      if (this.selectedUnitPendingMovementGroup)
+        this.selectedUnitPendingMovementGroup.destroy(true, true);
+      this.selectedUnitPendingMovementGroup =
+        this.renderPendingMovement(selectedUnit);
+      this.hasRenderedSelectedUnitPendingMovement = true;
+    }
   }
 
   clearHover() {
