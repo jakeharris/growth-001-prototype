@@ -25,13 +25,19 @@ export const initialState: State = {
 };
 
 const slice = createSlice({
-  name: "actionMenu",
+  name: "Action Menu",
   initialState,
   reducers: {
-    setCursorIndex: (state, action: PayloadAction<number>) => ({
+    preload: () => initialState,
+    moveCursorDown: (state, action: Action) => ({
       ...state,
-      cursorIndex: action.payload,
+      cursorIndex: (state.cursorIndex + 1) % state.actions.length,
     }),
+    moveCursorUp: (state, action: Action) => ({
+      ...state,
+      cursorIndex: (state.cursorIndex - 1) % state.actions.length,
+    }),
+    selectOption: (state, action: PayloadAction<ActionMenuOptions>) => state,
   },
 });
 
