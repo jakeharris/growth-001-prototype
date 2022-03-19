@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Position } from "../../../models";
+import { addPositions, Position } from "../../../models";
 import { clamp } from "../../../util";
 
 export interface State {
@@ -41,12 +41,15 @@ export const slice = createSlice({
       moveSourcePosition: null,
     }),
     moveCursor: (state, action) => {
-      const { x, y } = action.payload;
+      const newCursorPosition = addPositions(
+        state.cursorPosition,
+        action.payload
+      );
       return {
         ...state,
         cursorPosition: {
-          x: clamp(0, state.cursorPosition.x + x, state.width - 1),
-          y: clamp(0, state.cursorPosition.y + y, state.height - 1),
+          x: clamp(0, newCursorPosition.x, state.width - 1),
+          y: clamp(0, newCursorPosition.y, state.height - 1),
         },
       };
     },

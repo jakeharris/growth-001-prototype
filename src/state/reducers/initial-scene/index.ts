@@ -8,6 +8,7 @@ import {
   getMovementRangeTileIds,
   getTileId,
   haveSamePosition,
+  subtractPositions,
 } from "../../../models";
 
 export type State = {
@@ -125,10 +126,7 @@ export const selectMovementDelta = createSelector(
       return { x: 0, y: 0 };
     }
 
-    return {
-      x: cursorPosition.x - sourcePosition.x,
-      y: cursorPosition.y - sourcePosition.y,
-    };
+    return subtractPositions(cursorPosition, sourcePosition);
   }
 );
 

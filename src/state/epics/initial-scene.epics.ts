@@ -2,6 +2,7 @@ import { Action, PayloadAction } from "@reduxjs/toolkit";
 import { ofType, StateObservable } from "redux-observable";
 import { tap, Observable } from "rxjs";
 import { ignoreElements, withLatestFrom, map, filter } from "rxjs/operators";
+import { addPositions } from "../../models";
 import {
   selectMovementDelta,
   selectSelectedUnit,
@@ -26,20 +27,16 @@ const planMove$ = (
     filter(([_, initialScene]) => selectSelectedUnitId(initialScene) !== null),
     map(
       ([_, initialScene]: [PayloadAction<{ x: number; y: number }>, State]) => {
-        const { x: deltaX, y: deltaY } = selectMovementDelta(initialScene);
+        const movementDelta = selectMovementDelta(initialScene);
         const unit = selectSelectedUnit(initialScene);
 
         if (!unit) throw new Error("No unit selected");
-
-        const x = unit.position.x + deltaX;
-        const y = unit.position.y + deltaY;
 
         return {
           type: "Control/planMoveUnit",
           payload: {
             unitId: unit.id,
-            x,
-            y,
+            ...addPositions(unit.position, movementDelta),
           },
         };
       }

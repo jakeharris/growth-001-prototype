@@ -12,6 +12,7 @@ import {
   Unit,
   Colors,
   Team,
+  addPositions,
 } from "../models";
 import {
   selectHoveredUnit,
@@ -240,16 +241,19 @@ export class InitialScene extends Phaser.Scene {
       const unitGroup = this.add.group();
       unitGroup.setName(`unit-${unit.id}`);
 
-      unit.bodyPositions.forEach((position) => {
+      unit.bodyPositions.forEach((bodyPosition) => {
+        const absoluteBodyPosition = addPositions(unit.position, bodyPosition);
         const circle = this.add.circle(
-          (unit.position.x + position.x) * this.tileWidth,
-          (unit.position.y + position.y) * this.tileHeight,
+          absoluteBodyPosition.x * this.tileWidth,
+          absoluteBodyPosition.y * this.tileHeight,
           this.tileWidth / 2,
           getTeamColor(unit.team)
         );
         circle.setDepth(Depth.Units);
         circle.setOrigin(0, 0);
-        circle.setName(`unit-${unit.id}-body-${position.x}-${position.y}`);
+        circle.setName(
+          `unit-${unit.id}-body-${bodyPosition.x}-${bodyPosition.y}`
+        );
         circle.setInteractive();
         unitGroup.add(circle);
       });
@@ -349,10 +353,10 @@ export class InitialScene extends Phaser.Scene {
           const unit = selectSelectedUnit(this.store.getState())!;
           const mapTiles = selectMapTilesEntities(this.store.getState());
           const movementDelta = selectMovementDelta(this.store.getState());
-          const destinationPosition = {
-            x: unit.position.x + movementDelta.x,
-            y: unit.position.y + movementDelta.y,
-          };
+          const destinationPosition = addPositions(
+            unit.position,
+            movementDelta
+          );
           const destinationTile = mapTiles[getTileId(destinationPosition)]!;
 
           this.store.dispatch(
@@ -386,19 +390,23 @@ export class InitialScene extends Phaser.Scene {
             "tried moving a unit but unit.pendingPosition is null"
           );
 
-        unit.bodyPositions.forEach((position) => {
+        unit.bodyPositions.forEach((bodyPosition) => {
           const sprite = this.children.getByName(
-            `unit-${unitId}-body-${position.x}-${position.y}`
+            `unit-${unitId}-body-${bodyPosition.x}-${bodyPosition.y}`
           ) as Phaser.GameObjects.Shape;
 
           if (!sprite)
             throw new Error(
-              `tried moving a unit, but couldn\'t find sprite for body position (${position.x}, ${position.y})`
+              `tried moving a unit, but couldn\'t find sprite for body position (${bodyPosition.x}, ${bodyPosition.y})`
             );
 
+          const absolutePendingBodyPosition = addPositions(
+            unit.pendingPosition!,
+            bodyPosition
+          );
           sprite.setPosition(
-            (unit.pendingPosition!.x + position.x) * this.tileWidth,
-            (unit.pendingPosition!.y + position.y) * this.tileHeight
+            absolutePendingBodyPosition.x * this.tileWidth,
+            absolutePendingBodyPosition.y * this.tileHeight
           );
           sprite.fillColor = Colors.TurnTaken;
         });
@@ -475,18 +483,22 @@ export class InitialScene extends Phaser.Scene {
     const group = this.add.group().setName(`unit-${unit.id}-pending`);
     if (!unit.pendingPosition) throw Error("Unit has no pending position");
 
-    unit.bodyPositions.forEach((position) => {
-      const newPosition = this.add.circle(
-        (unit.pendingPosition!.x + position.x) * this.tileWidth,
-        (unit.pendingPosition!.y + position.y) * this.tileHeight,
+    unit.bodyPositions.forEach((bodyPosition) => {
+      const absolutePendingBodyPosition = addPositions(
+        unit.pendingPosition!,
+        bodyPosition
+      );
+      const spritePosition = this.add.circle(
+        absolutePendingBodyPosition.x * this.tileWidth,
+        absolutePendingBodyPosition.y * this.tileHeight,
         this.tileWidth / 2,
         getTeamColor(unit.team)
       );
-      newPosition.setName(`unit-${unit.id}-pending-position`);
-      newPosition.setAlpha(0.7);
-      newPosition.setDepth(Depth.Units);
-      newPosition.setOrigin(0, 0);
-      group.add(newPosition);
+      spritePosition.setName(`unit-${unit.id}-pending-position`);
+      spritePosition.setAlpha(0.7);
+      spritePosition.setDepth(Depth.Units);
+      spritePosition.setOrigin(0, 0);
+      group.add(spritePosition);
     });
 
     return group;

@@ -286,10 +286,9 @@ function isTraversible(
  * @returns A list of absolute grid positions that describes the tiles that the unit occupies
  */
 export function getAbsoluteBodyPositions(unit: Unit): Position[] {
-  return unit.bodyPositions.map((position) => ({
-    x: position.x + unit.position.x,
-    y: position.y + unit.position.y,
-  }));
+  return unit.bodyPositions.map((bodyPosition) =>
+    addPositions(unit.position, bodyPosition)
+  );
 }
 
 /**
@@ -302,8 +301,7 @@ export function getDestinationPositions(
   unit: Unit,
   movementDelta: Position
 ): Position[] {
-  return unit.bodyPositions.map((position) => ({
-    x: unit.position.x + position.x + movementDelta.x,
-    y: unit.position.y + position.y + movementDelta.y,
-  }));
+  return unit.bodyPositions.map((bodyPosition) =>
+    addPositions(addPositions(unit.position, bodyPosition), movementDelta)
+  );
 }
