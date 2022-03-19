@@ -28,6 +28,7 @@ import {
   selectSelectedUnitMovementTileIds,
   selectHoveredUnitMovementTileIds,
   selectMovingUnitMovementTileIds,
+  selectMovementDelta,
 } from "../state/reducers/initial-scene";
 import { actions as MapActions } from "../state/reducers/initial-scene/map.state";
 import { actions as UnitsActions } from "../state/reducers/initial-scene/units.state";
@@ -344,8 +345,12 @@ export class InitialScene extends Phaser.Scene {
         if (isCursorOnValidDestinationTile) {
           const unit = selectSelectedUnit(this.store.getState())!;
           const mapTiles = selectMapTilesEntities(this.store.getState());
-          const cursorPosition = selectCursorPosition(this.store.getState());
-          const destinationTile = mapTiles[getTileId(cursorPosition)]!;
+          const movementDelta = selectMovementDelta(this.store.getState());
+          const destinationPosition = {
+            x: unit.position.x + movementDelta.x,
+            y: unit.position.y + movementDelta.y,
+          };
+          const destinationTile = mapTiles[getTileId(destinationPosition)]!;
 
           this.store.dispatch(
             ControlActions.moveUnit({
