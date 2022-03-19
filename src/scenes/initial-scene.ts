@@ -88,6 +88,7 @@ export class InitialScene extends Phaser.Scene {
     this.store.dispatch(
       ControlActions.preload({ width: this.width, height: this.height })
     );
+    this.store.dispatch(ActionMenuActions.preload());
   }
 
   update(time: number, delta: number) {
