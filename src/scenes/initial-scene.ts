@@ -33,9 +33,12 @@ import {
   selectActionMenuPosition,
   selectAvailableActions,
 } from "../state/reducers/initial-scene";
-import { actions as MapActions } from "../state/reducers/initial-scene/map.state";
-import { actions as UnitsActions } from "../state/reducers/initial-scene/units.state";
-import { actions as ControlActions } from "../state/reducers/initial-scene/control.state";
+import {
+  ActionMenuActions,
+  ControlActions,
+  MapActions,
+  UnitsActions,
+} from "../state/reducers";
 import { getActionName } from "../state/reducers/initial-scene/action-menu.state";
 
 const enum Depth {

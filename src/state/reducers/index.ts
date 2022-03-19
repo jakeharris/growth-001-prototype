@@ -20,3 +20,10 @@ export const selectInitialSceneTilesEntities = createSelector(
   selectInitialScene,
   initialSceneState.selectMapTilesEntities
 );
+
+export {
+  ActionMenuActions,
+  ControlActions,
+  MapActions,
+  UnitsActions,
+} from "./initial-scene";

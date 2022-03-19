@@ -9,6 +9,7 @@ import {
   selectSelectedUnitId,
   State,
 } from "../reducers/initial-scene";
+import { ControlActions } from "../reducers";
 
 const addPreloadText$ = (action$: Observable<Action>) =>
   action$.pipe(
@@ -22,7 +23,7 @@ const planMove$ = (
   state$: StateObservable<State>
 ) =>
   action$.pipe(
-    ofType("Control/moveCursor"),
+    ofType(ControlActions.moveCursor.type),
     withLatestFrom(state$),
     filter(([_, initialScene]) => selectSelectedUnitId(initialScene) !== null),
     map(
@@ -32,13 +33,10 @@ const planMove$ = (
 
         if (!unit) throw new Error("No unit selected");
 
-        return {
-          type: "Control/planMoveUnit",
-          payload: {
-            unitId: unit.id,
-            ...addPositions(unit.position, movementDelta),
-          },
-        };
+        return ControlActions.planMoveUnit({
+          unitId: unit.id,
+          ...addPositions(unit.position, movementDelta),
+        });
       }
     )
   );

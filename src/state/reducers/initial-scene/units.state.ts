@@ -4,7 +4,7 @@ import {
   EntityState,
 } from "@reduxjs/toolkit";
 import { Unit } from "../../../models";
-import { actions as ControlActions } from "./control.state";
+import { ControlActions } from "./control.state";
 
 export type State = EntityState<Unit>;
 
@@ -80,5 +80,5 @@ const slice = createSlice({
   },
 });
 
-export const { actions, reducer } = slice;
+export const { actions: UnitsActions, reducer } = slice;
 export const { selectEntities, selectAll } = adapter.getSelectors();

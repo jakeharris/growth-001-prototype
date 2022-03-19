@@ -12,6 +12,11 @@ import {
   subtractPositions,
 } from "../../../models";
 
+export { ActionMenuActions } from "./action-menu.state";
+export { ControlActions } from "./control.state";
+export { MapActions } from "./map.state";
+export { UnitsActions } from "./units.state";
+
 export type State = {
   map: MapState.State;
   units: UnitsState.State;

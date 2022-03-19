@@ -41,6 +41,6 @@ const slice = createSlice({
   },
 });
 
-export const { actions, reducer } = slice;
+export const { actions: ActionMenuActions, reducer } = slice;
 export const selectCursorIndex = (state: State) => state.cursorIndex;
 export const selectActions = (state: State) => state.actions;

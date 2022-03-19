@@ -25,6 +25,6 @@ const slice = createSlice({
   },
 });
 
-export const { actions, reducer } = slice;
+export const { actions: MapActions, reducer } = slice;
 
 export const { selectIds, selectEntities, selectAll } = adapter.getSelectors();
