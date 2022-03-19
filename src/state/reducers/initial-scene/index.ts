@@ -223,7 +223,7 @@ export const selectAvailableActions = createSelector(
 );
 export const selectActionMenuWidth = createSelector(
   selectAvailableActions,
-  () => 2 // @todo: determine this dynamically
+  () => 3 // @todo: determine this dynamically
 );
 export const selectMovingUnitRelativeWidthBounds = createSelector(
   selectMovingUnit,
