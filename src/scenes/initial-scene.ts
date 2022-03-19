@@ -32,6 +32,7 @@ import {
   selectMovementDelta,
   selectActionMenuPosition,
   selectAvailableActions,
+  selectActionMenuWidth,
 } from "../state/reducers/initial-scene";
 import {
   ActionMenuActions,
@@ -611,6 +612,7 @@ export class InitialScene extends Phaser.Scene {
   renderMenu() {
     const menuGroup = this.add.group().setName("move-menu");
     const menuPosition = selectActionMenuPosition(this.store.getState());
+    const menuWidth = selectActionMenuWidth(this.store.getState());
     const menuActions = selectAvailableActions(this.store.getState());
 
     if (!menuPosition) throw Error("No menu position");
@@ -618,8 +620,8 @@ export class InitialScene extends Phaser.Scene {
     const menu = this.add.rectangle(
       menuPosition.x * this.tileWidth,
       menuPosition.y * this.tileHeight,
-      this.tileWidth * 2,
-      this.tileHeight * 2,
+      this.tileWidth * menuWidth,
+      this.tileHeight * menuActions.length,
       0x888888
     );
     menu.setOrigin(0, 0);
@@ -629,8 +631,8 @@ export class InitialScene extends Phaser.Scene {
     const menuShadow = this.add.rectangle(
       menuPosition.x * this.tileWidth + 4,
       menuPosition.y * this.tileHeight + 4,
-      this.tileWidth * 2,
-      this.tileHeight * 2,
+      this.tileWidth * menuWidth,
+      this.tileHeight * menuActions.length,
       0x000000
     );
     menuShadow.setAlpha(0.5);
@@ -638,10 +640,10 @@ export class InitialScene extends Phaser.Scene {
     menuShadow.setDepth(Depth.Menu - 1);
     menuGroup.add(menuShadow);
 
-    menuActions.forEach((action) => {
+    menuActions.forEach((action, index) => {
       const actionText = this.add.text(
         menuPosition.x * this.tileWidth + 8,
-        menuPosition.y * this.tileHeight + 8,
+        menuPosition.y * this.tileHeight + index * this.tileHeight + 8,
         getActionName(action),
         {
           fontFamily: "monospace", // or monospace
