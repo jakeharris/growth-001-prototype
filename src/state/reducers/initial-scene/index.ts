@@ -191,6 +191,10 @@ export const selectMovingUnit = createSelector(
   selectMovingUnitId,
   (units, movingUnitId) => units.find((unit) => unit.id === movingUnitId)
 );
+export const selectMovingUnitPendingPosition = createSelector(
+  selectMovingUnit,
+  (unit) => (unit ? unit.pendingPosition : undefined)
+);
 export const selectMovingUnitMovementTileIds = createSelector(
   selectMovingUnit,
   selectMapWidth,
@@ -202,4 +206,63 @@ export const selectMovingUnitMovementTileIds = createSelector(
 export const selectPreviousUnitPosition = createSelector(
   selectMovingUnit,
   (movingUnit) => (movingUnit ? movingUnit.position : null)
+);
+
+/**
+ * Action Menu
+ */
+export const selectActionMenuState = (state: State) => state.actionMenu;
+export const selectAvailableActions = createSelector(
+  selectActionMenuState,
+  ActionMenuState.selectActions
+);
+export const selectActionMenuWidth = createSelector(
+  selectAvailableActions,
+  () => 2 // @todo: determine this dynamically
+);
+export const selectMovingUnitRelativeWidthBounds = createSelector(
+  selectMovingUnit,
+  (
+    movingUnit
+  ): {
+    leftmost: number;
+    rightmost: number;
+  } => {
+    if (!movingUnit) return { leftmost: 0, rightmost: 0 };
+
+    const leftmost = Math.min(...movingUnit.bodyPositions.map((pos) => pos.x));
+    const rightmost = Math.max(...movingUnit.bodyPositions.map((pos) => pos.x));
+
+    return { leftmost, rightmost };
+  }
+);
+export const selectActionMenuPosition = createSelector(
+  selectMapWidth,
+  selectMovingUnitPendingPosition,
+  selectMovingUnitRelativeWidthBounds,
+  selectActionMenuWidth,
+  (mapWidth, pendingPosition, unitRelativeWidthBounds, menuWidth) => {
+    if (!pendingPosition) return undefined;
+
+    /**
+     * We want to draw the action menu such that:
+     * - it is on the left of the unit
+     * - unless we're too far to the left, in which case we draw it on the right
+     * - there is a 1-tile margin between the moving unit and the menu
+     *
+     * Also, since the menu has width, we need to consider that in the
+     * "draw to the left" case.
+     */
+    let x =
+      pendingPosition.x - unitRelativeWidthBounds.leftmost - menuWidth - 1;
+
+    if (x < mapWidth / 2) {
+      x = pendingPosition.x + unitRelativeWidthBounds.rightmost + 1 + 1;
+    }
+
+    return {
+      x,
+      y: pendingPosition.y,
+    };
+  }
 );
