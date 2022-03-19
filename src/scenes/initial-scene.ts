@@ -85,7 +85,8 @@ export class InitialScene extends Phaser.Scene {
      */
     // handle changes to cursor position
     const newCursorPosition = selectCursorPosition(this.store.getState());
-    if (this.cursor && this.cursorHasMoved(newCursorPosition)) {
+    const cursorHasMoved = this.cursorHasMoved(newCursorPosition);
+    if (this.cursor && cursorHasMoved) {
       this.cursorPosition = newCursorPosition;
       this.cursor.setPosition(
         newCursorPosition.x * this.tileWidth,
@@ -101,7 +102,7 @@ export class InitialScene extends Phaser.Scene {
     if (
       isSelecting &&
       selectedUnit &&
-      haveSamePosition(selectedUnit.pendingPosition!, newCursorPosition) &&
+      cursorHasMoved &&
       !haveSamePosition(selectedUnit.position, selectedUnit.pendingPosition!)
     ) {
       this.hasRenderedSelectedUnitPendingMovement = false;
@@ -515,8 +516,10 @@ export class InitialScene extends Phaser.Scene {
     }
 
     if (!this.hasRenderedSelectedUnitPendingMovement) {
-      if (this.selectedUnitPendingMovementGroup)
+      if (this.selectedUnitPendingMovementGroup) {
         this.selectedUnitPendingMovementGroup.destroy(true, true);
+      }
+
       this.selectedUnitPendingMovementGroup =
         this.renderPendingMovement(selectedUnit);
       this.hasRenderedSelectedUnitPendingMovement = true;
