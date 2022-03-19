@@ -78,7 +78,7 @@ export const slice = createSlice({
   },
 });
 
-export const { actions, reducer } = slice;
+export const { actions: ControlActions, reducer } = slice;
 
 export const selectCursorPosition = (state: State) => state.cursorPosition;
 export const selectMoveSourcePosition = (state: State) =>
