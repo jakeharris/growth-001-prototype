@@ -1,27 +1,27 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { Action, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export enum ActionMenuActions {
+export enum ActionMenuOptions {
   Attack,
   Wait,
 }
 
-export function getActionName(action: ActionMenuActions) {
+export function getActionName(action: ActionMenuOptions) {
   switch (action) {
-    case ActionMenuActions.Attack:
+    case ActionMenuOptions.Attack:
       return "Attack";
-    case ActionMenuActions.Wait:
+    case ActionMenuOptions.Wait:
       return "Wait";
   }
 }
 
 export interface State {
   cursorIndex: number;
-  actions: ActionMenuActions[]; // @todo: populate from something
+  actions: ActionMenuOptions[]; // @todo: populate from something
 }
 
 export const initialState: State = {
   cursorIndex: 0,
-  actions: [ActionMenuActions.Wait],
+  actions: [ActionMenuOptions.Wait],
 };
 
 const slice = createSlice({
