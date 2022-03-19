@@ -30,15 +30,19 @@ import {
   selectHoveredUnitMovementTileIds,
   selectMovingUnitMovementTileIds,
   selectMovementDelta,
+  selectActionMenuPosition,
+  selectAvailableActions,
 } from "../state/reducers/initial-scene";
 import { actions as MapActions } from "../state/reducers/initial-scene/map.state";
 import { actions as UnitsActions } from "../state/reducers/initial-scene/units.state";
 import { actions as ControlActions } from "../state/reducers/initial-scene/control.state";
+import { getActionName } from "../state/reducers/initial-scene/action-menu.state";
 
 const enum Depth {
   Tiles = 0,
   Cursor = 5,
   Units = 10,
+  Menu = 15,
 }
 
 export class InitialScene extends Phaser.Scene {
@@ -63,8 +67,10 @@ export class InitialScene extends Phaser.Scene {
   selectedUnitMovementTilesGroup: Phaser.GameObjects.Group | null = null;
 
   hasRenderedMovingUnit = false;
+  hasRenderedActionMenu = false;
   renderedMovingUnit: Unit | null = null;
   movingUnitGroup: Phaser.GameObjects.Group | null = null;
+  actionMenuGroup: Phaser.GameObjects.Group | null = null;
 
   constructor(private store: Store<State>) {
     super({ key: "InitialScene" });
@@ -582,12 +588,70 @@ export class InitialScene extends Phaser.Scene {
     this.movingUnitGroup = this.renderPendingMovement(movingUnit!);
     this.movingUnitGroup.addMultiple(movementRangeGroup.getChildren());
     this.hasRenderedMovingUnit = true;
+
+    this.actionMenuGroup = this.renderMenu();
+    this.hasRenderedActionMenu = true;
+  }
+
+  renderMenu() {
+    const menuGroup = this.add.group().setName("move-menu");
+    const menuPosition = selectActionMenuPosition(this.store.getState());
+    const menuActions = selectAvailableActions(this.store.getState());
+
+    if (!menuPosition) throw Error("No menu position");
+
+    const menu = this.add.rectangle(
+      menuPosition.x * this.tileWidth,
+      menuPosition.y * this.tileHeight,
+      this.tileWidth * 2,
+      this.tileHeight * 2,
+      0x888888
+    );
+    menu.setOrigin(0, 0);
+    menu.setDepth(Depth.Menu);
+    menuGroup.add(menu);
+
+    const menuShadow = this.add.rectangle(
+      menuPosition.x * this.tileWidth + 4,
+      menuPosition.y * this.tileHeight + 4,
+      this.tileWidth * 2,
+      this.tileHeight * 2,
+      0x000000
+    );
+    menuShadow.setAlpha(0.5);
+    menuShadow.setOrigin(0, 0);
+    menuShadow.setDepth(Depth.Menu - 1);
+    menuGroup.add(menuShadow);
+
+    menuActions.forEach((action) => {
+      const actionText = this.add.text(
+        menuPosition.x * this.tileWidth + 8,
+        menuPosition.y * this.tileHeight + 8,
+        getActionName(action),
+        {
+          fontFamily: "monospace", // or monospace
+          fontSize: "16px",
+          color: "#ffffff",
+          align: "center",
+          resolution: 4,
+        }
+      );
+      actionText.setOrigin(0, 0);
+      actionText.setDepth(Depth.Menu + 1);
+      menuGroup.add(actionText);
+    });
+
+    return menuGroup;
   }
 
   clearMove() {
     this.movingUnitGroup?.destroy(true, true);
     this.movingUnitGroup = null;
     this.hasRenderedMovingUnit = false;
+
+    this.actionMenuGroup?.destroy(true, true);
+    this.actionMenuGroup = null;
+    this.hasRenderedActionMenu = false;
   }
 }
 
