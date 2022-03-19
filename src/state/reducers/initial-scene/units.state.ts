@@ -15,7 +15,7 @@ const adapter = createEntityAdapter({
 const initialState: State = adapter.getInitialState();
 
 const slice = createSlice({
-  name: "initialScene",
+  name: "Units",
   initialState,
   reducers: {
     preload: () => initialState,
