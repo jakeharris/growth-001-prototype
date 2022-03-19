@@ -121,7 +121,10 @@ export class InitialScene extends Phaser.Scene {
     /**
      * @todo Candidate for epic?
      */
-    if (this.hasRenderedHoveredUnit && !isHovering) {
+    if (
+      this.hasRenderedHoveredUnit &&
+      (!isHovering || isSelecting || isMoving)
+    ) {
       this.clearHover();
     }
 
@@ -320,7 +323,7 @@ export class InitialScene extends Phaser.Scene {
       const isSelecting = selectIsSelectingUnit(this.store.getState());
       const isMoving = selectIsMoving(this.store.getState());
 
-      if (isHovering) {
+      if (isHovering && !isSelecting && !isMoving) {
         const hoveredUnit = selectHoveredUnit(this.store.getState());
 
         if (
