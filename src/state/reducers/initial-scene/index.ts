@@ -2,6 +2,7 @@ import { createSelector } from "@reduxjs/toolkit";
 import * as MapState from "./map.state";
 import * as UnitsState from "./units.state";
 import * as ControlState from "./control.state";
+import * as ActionMenuState from "./action-menu.state";
 import {
   getAbsoluteBodyPositions,
   getDestinationPositions,
@@ -15,12 +16,14 @@ export type State = {
   map: MapState.State;
   units: UnitsState.State;
   control: ControlState.State;
+  actionMenu: ActionMenuState.State;
 };
 
 export const reducers = {
   map: MapState.reducer,
   units: UnitsState.reducer,
   control: ControlState.reducer,
+  actionMenu: ActionMenuState.reducer,
 };
 
 /**
