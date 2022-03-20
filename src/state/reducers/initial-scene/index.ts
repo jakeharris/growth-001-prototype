@@ -217,6 +217,11 @@ export const selectPreviousUnitPosition = createSelector(
  * Action Menu
  */
 export const selectActionMenuState = (state: State) => state.actionMenu;
+export const selectActionMenuCursorIndex = createSelector(
+  selectActionMenuState,
+  ActionMenuState.selectCursorIndex
+);
+
 export const selectAvailableActions = createSelector(
   selectActionMenuState,
   ActionMenuState.selectActions

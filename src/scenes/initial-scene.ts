@@ -33,6 +33,7 @@ import {
   selectActionMenuPosition,
   selectAvailableActions,
   selectActionMenuWidth,
+  selectActionMenuCursorIndex,
 } from "../state/reducers/initial-scene";
 import {
   ActionMenuActions,
@@ -72,6 +73,7 @@ export class InitialScene extends Phaser.Scene {
 
   hasRenderedMovingUnit = false;
   hasRenderedActionMenu = false;
+  hasRenderedActionMenuCursor = false;
   renderedMovingUnit: Unit | null = null;
   movingUnitGroup: Phaser.GameObjects.Group | null = null;
   actionMenuGroup: Phaser.GameObjects.Group | null = null;
@@ -179,6 +181,10 @@ export class InitialScene extends Phaser.Scene {
      */
     if (this.hasRenderedMovingUnit && !isMoving) {
       this.clearMove();
+    }
+
+    if (!this.hasRenderedActionMenuCursor && isMoving) {
+      this.updateActionMenuCursor();
     }
   }
 
@@ -323,6 +329,7 @@ export class InitialScene extends Phaser.Scene {
         this.store.dispatch(ControlActions.moveCursor({ x: 0, y: 1 }));
       } else {
         this.store.dispatch(ActionMenuActions.moveCursorDown());
+        this.hasRenderedActionMenuCursor = false;
       }
     });
     this.input.keyboard.on("keydown-UP", () => {
@@ -331,6 +338,7 @@ export class InitialScene extends Phaser.Scene {
         this.store.dispatch(ControlActions.moveCursor({ x: 0, y: -1 }));
       } else {
         this.store.dispatch(ActionMenuActions.moveCursorUp());
+        this.hasRenderedActionMenuCursor = false;
       }
     });
     this.input.keyboard.on("keydown-LEFT", () => {
@@ -605,15 +613,15 @@ export class InitialScene extends Phaser.Scene {
     this.movingUnitGroup.addMultiple(movementRangeGroup.getChildren());
     this.hasRenderedMovingUnit = true;
 
-    this.actionMenuGroup = this.renderMenu();
-    this.hasRenderedActionMenu = true;
+    this.actionMenuGroup = this.renderActionMenu();
   }
 
-  renderMenu() {
+  renderActionMenu() {
     const menuGroup = this.add.group().setName("move-menu");
     const menuPosition = selectActionMenuPosition(this.store.getState());
     const menuWidth = selectActionMenuWidth(this.store.getState());
     const menuActions = selectAvailableActions(this.store.getState());
+    const cursorIndex = selectActionMenuCursorIndex(this.store.getState());
 
     if (!menuPosition) throw Error("No menu position");
 
@@ -642,7 +650,7 @@ export class InitialScene extends Phaser.Scene {
 
     menuActions.forEach((action, index) => {
       const actionText = this.add.text(
-        menuPosition.x * this.tileWidth + 8,
+        menuPosition.x * this.tileWidth + 8 + 16, // first 8 is for the padding, second 16 is space for the cursor
         menuPosition.y * this.tileHeight + index * this.tileHeight + 8,
         getActionName(action),
         {
@@ -658,7 +666,50 @@ export class InitialScene extends Phaser.Scene {
       menuGroup.add(actionText);
     });
 
+    const cursor = this.add.triangle(
+      menuPosition.x * this.tileWidth + 8,
+      menuPosition.y * this.tileHeight + cursorIndex * this.tileHeight + 8 + 4,
+      0,
+      0,
+      8,
+      4,
+      0,
+      8,
+      0xffffff
+    );
+    cursor.setName("action-menu-cursor");
+    cursor.setOrigin(0, 0);
+    cursor.setDepth(Depth.Menu + 2);
+    menuGroup.add(cursor);
+
+    this.hasRenderedActionMenu = true;
+    this.hasRenderedActionMenuCursor = true;
+
     return menuGroup;
+  }
+
+  updateActionMenuCursor() {
+    const actionMenuCursor = this.actionMenuGroup?.children.entries.filter(
+      (child) => child.name === "action-menu-cursor"
+    )[0] as Phaser.GameObjects.Triangle;
+
+    if (!actionMenuCursor) {
+      throw new Error("No action menu cursor");
+    }
+
+    const menuPosition = selectActionMenuPosition(this.store.getState()); // the tile position of the entire menu
+
+    if (!menuPosition) {
+      throw Error("No menu position");
+    }
+
+    const cursorIndex = selectActionMenuCursorIndex(this.store.getState());
+    actionMenuCursor.setPosition(
+      menuPosition.x * this.tileWidth + 8,
+      menuPosition.y * this.tileHeight + cursorIndex * this.tileHeight + 8 + 4
+    );
+
+    this.hasRenderedActionMenuCursor = true;
   }
 
   clearMove() {

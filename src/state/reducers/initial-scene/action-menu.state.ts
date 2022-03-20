@@ -35,7 +35,10 @@ const slice = createSlice({
     }),
     moveCursorUp: (state, action: Action) => ({
       ...state,
-      cursorIndex: (state.cursorIndex - 1) % state.actions.length,
+      cursorIndex:
+        (state.cursorIndex > 0
+          ? state.cursorIndex - 1
+          : state.actions.length - 1) % state.actions.length,
     }),
     selectOption: (state, action: PayloadAction<ActionMenuOptions>) => state,
   },
