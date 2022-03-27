@@ -43,6 +43,7 @@ import {
 import { ActionMenuComponent } from "../components/action-menu/action-menu.component";
 import { CursorComponent } from "../components/cursor/cursor.component";
 import { MapComponent } from "../components/map/map.component";
+import { UnitComponent } from "../components/unit/unit.component";
 
 export class InitialScene extends Phaser.Scene {
   timer = 0;
@@ -51,6 +52,7 @@ export class InitialScene extends Phaser.Scene {
 
   cursor: CursorComponent | null = null;
   map: MapComponent | null = null;
+  units: UnitComponent[] = [];
 
   hasRenderedHoveredUnit = false;
   renderedHoveredUnit: Unit | null = null;
@@ -85,6 +87,8 @@ export class InitialScene extends Phaser.Scene {
 
   update(time: number, delta: number) {
     this.cursor?.update();
+    this.map?.update();
+    this.units.forEach((unit) => unit.update());
 
     const isHovering = selectIsHoveringUnit(this.store.getState());
     const isSelecting = selectIsSelectingUnit(this.store.getState());
@@ -165,7 +169,7 @@ export class InitialScene extends Phaser.Scene {
   create() {
     this.cursor = new CursorComponent(this.store, this);
     this.map = new MapComponent(this.store, this);
-    this.generateUnits();
+    this.units = this.generateUnits();
 
     this.configureCamera();
     this.configureInput();
@@ -174,30 +178,14 @@ export class InitialScene extends Phaser.Scene {
   generateUnits() {
     const map = selectMapTilesEntities(this.store.getState());
     const units = createRandomInitialUnits(3, this.width, this.height, map);
+    const unitComponents: UnitComponent[] = [];
 
     units.forEach((unit) => {
-      const unitGroup = this.add.group();
-      unitGroup.setName(`unit-${unit.id}`);
-
-      unit.bodyPositions.forEach((bodyPosition) => {
-        const absoluteBodyPosition = addPositions(unit.position, bodyPosition);
-        const circle = this.add.circle(
-          absoluteBodyPosition.x * TILE_WIDTH,
-          absoluteBodyPosition.y * TILE_HEIGHT,
-          TILE_WIDTH / 2,
-          getTeamColor(unit.team)
-        );
-        circle.setDepth(Depth.Units);
-        circle.setOrigin(0, 0);
-        circle.setName(
-          `unit-${unit.id}-body-${bodyPosition.x}-${bodyPosition.y}`
-        );
-        circle.setInteractive();
-        unitGroup.add(circle);
-      });
+      unitComponents.push(new UnitComponent(this.store, this, unit));
     });
 
     this.store.dispatch(UnitsActions.createUnits({ units }));
+    return unitComponents;
   }
 
   configureCamera() {
@@ -324,27 +312,6 @@ export class InitialScene extends Phaser.Scene {
           throw new Error(
             "tried moving a unit but unit.pendingPosition is null"
           );
-
-        unit.bodyPositions.forEach((bodyPosition) => {
-          const sprite = this.children.getByName(
-            `unit-${unitId}-body-${bodyPosition.x}-${bodyPosition.y}`
-          ) as Phaser.GameObjects.Shape;
-
-          if (!sprite)
-            throw new Error(
-              `tried moving a unit, but couldn\'t find sprite for body position (${bodyPosition.x}, ${bodyPosition.y})`
-            );
-
-          const absolutePendingBodyPosition = addPositions(
-            unit.pendingPosition!,
-            bodyPosition
-          );
-          sprite.setPosition(
-            absolutePendingBodyPosition.x * TILE_WIDTH,
-            absolutePendingBodyPosition.y * TILE_HEIGHT
-          );
-          sprite.fillColor = Colors.TurnTaken;
-        });
 
         this.store.dispatch(ControlActions.confirmMoveUnit({ unitId }));
       }
