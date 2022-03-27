@@ -45,13 +45,14 @@ import {
   UnitsActions,
 } from "../state/reducers";
 import { ActionMenuComponent } from "../components/action-menu/action-menu.component";
+import { CursorComponent } from "../components/cursor/cursor.component";
 
 export class InitialScene extends Phaser.Scene {
   timer = 0;
   width = 20; // in tiles
   height = 17; // in tiles
 
-  cursor: Phaser.GameObjects.Rectangle | null = null;
+  cursor: CursorComponent | null = null;
 
   cursorPosition: Position = { x: 0, y: 0 };
 
@@ -95,13 +96,8 @@ export class InitialScene extends Phaser.Scene {
     // handle changes to cursor position
     const newCursorPosition = selectCursorPosition(this.store.getState());
     const cursorHasMoved = this.cursorHasMoved(newCursorPosition);
-    if (this.cursor && cursorHasMoved) {
-      this.cursorPosition = newCursorPosition;
-      this.cursor.setPosition(
-        newCursorPosition.x * TILE_WIDTH,
-        newCursorPosition.y * TILE_HEIGHT
-      );
-    }
+
+    this.cursor?.update();
 
     const isHovering = selectIsHoveringUnit(this.store.getState());
     const isSelecting = selectIsSelectingUnit(this.store.getState());
@@ -181,34 +177,12 @@ export class InitialScene extends Phaser.Scene {
   }
 
   create() {
-    this.generateCursor();
+    this.cursor = new CursorComponent(this.store, this);
     this.generateMap();
     this.generateUnits();
 
     this.configureCamera();
     this.configureInput();
-  }
-
-  generateCursor() {
-    const cursor = this.add.rectangle(0, 0, TILE_WIDTH, TILE_HEIGHT, 0xffffff);
-    cursor.setDepth(Depth.Cursor);
-    cursor.setOrigin(0, 0);
-
-    this.tweens.add({
-      targets: cursor,
-      alpha: 0.3,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut",
-      duration: 800,
-    });
-
-    this.cursor = cursor;
-    if (!this.cursor) {
-      throw new Error("Cursor is null");
-    }
-
-    this.cursorPosition = selectCursorPosition(this.store.getState());
   }
 
   generateMap() {
@@ -521,7 +495,6 @@ export class InitialScene extends Phaser.Scene {
   }
 
   renderSelect() {
-    if (this.cursor) this.cursor.fillColor = 0xdddd00;
     const mapTiles = selectMapTilesEntities(this.store.getState());
     const selectedUnit = selectSelectedUnit(this.store.getState());
     const selectedUnitMovementTileIds = selectSelectedUnitMovementTileIds(
