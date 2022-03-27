@@ -89,7 +89,6 @@ export class ActionMenuComponent extends Phaser.GameObjects.Container {
   }
 
   update() {
-    super.update();
     const state = this.store.getState();
     if (state && this.previousState !== state) {
       this.render(state);
