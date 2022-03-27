@@ -33,10 +33,6 @@ import {
   selectHoveredUnitMovementTileIds,
   selectMovingUnitMovementTileIds,
   selectMovementDelta,
-  selectActionMenuPosition,
-  selectAvailableActions,
-  selectActionMenuWidth,
-  selectActionMenuCursorIndex,
 } from "../state/reducers/initial-scene";
 import {
   ActionMenuActions,
