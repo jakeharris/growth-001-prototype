@@ -264,7 +264,6 @@ export class InitialScene extends Phaser.Scene {
         this.store.dispatch(ControlActions.moveCursor({ x: 0, y: 1 }));
       } else {
         this.store.dispatch(ActionMenuActions.moveCursorDown());
-        this.hasRenderedActionMenuCursor = false;
       }
     });
     this.input.keyboard.on("keydown-UP", () => {
@@ -273,7 +272,6 @@ export class InitialScene extends Phaser.Scene {
         this.store.dispatch(ControlActions.moveCursor({ x: 0, y: -1 }));
       } else {
         this.store.dispatch(ActionMenuActions.moveCursorUp());
-        this.hasRenderedActionMenuCursor = false;
       }
     });
     this.input.keyboard.on("keydown-LEFT", () => {
