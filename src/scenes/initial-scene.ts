@@ -44,21 +44,12 @@ import {
   MapActions,
   UnitsActions,
 } from "../state/reducers";
-import { getActionName } from "../state/reducers/initial-scene/action-menu.state";
-
-const enum Depth {
-  Tiles = 0,
-  Cursor = 5,
-  Units = 10,
-  Menu = 15,
-}
+import { ActionMenuComponent } from "../components/action-menu/action-menu.component";
 
 export class InitialScene extends Phaser.Scene {
   timer = 0;
   width = 20; // in tiles
   height = 17; // in tiles
-  tileWidth = 32;
-  tileHeight = 32;
 
   cursor: Phaser.GameObjects.Rectangle | null = null;
 
@@ -79,7 +70,7 @@ export class InitialScene extends Phaser.Scene {
   hasRenderedActionMenuCursor = false;
   renderedMovingUnit: Unit | null = null;
   movingUnitGroup: Phaser.GameObjects.Group | null = null;
-  actionMenuGroup: Phaser.GameObjects.Group | null = null;
+  actionMenu: ActionMenuComponent | null = null;
 
   constructor(private store: Store<State>) {
     super({ key: "InitialScene" });
@@ -186,9 +177,7 @@ export class InitialScene extends Phaser.Scene {
       this.clearMove();
     }
 
-    if (!this.hasRenderedActionMenuCursor && isMoving) {
-      this.updateActionMenuCursor();
-    }
+    if (this.actionMenu) this.actionMenu.update();
   }
 
   create() {
@@ -601,103 +590,7 @@ export class InitialScene extends Phaser.Scene {
     this.movingUnitGroup.addMultiple(movementRangeGroup.getChildren());
     this.hasRenderedMovingUnit = true;
 
-    this.actionMenuGroup = this.renderActionMenu();
-  }
-
-  renderActionMenu() {
-    const menuGroup = this.add.group().setName("move-menu");
-    const menuPosition = selectActionMenuPosition(this.store.getState());
-    const menuWidth = selectActionMenuWidth(this.store.getState());
-    const menuActions = selectAvailableActions(this.store.getState());
-    const cursorIndex = selectActionMenuCursorIndex(this.store.getState());
-
-    if (!menuPosition) throw Error("No menu position");
-
-    const menu = this.add.rectangle(
-      menuPosition.x * this.tileWidth,
-      menuPosition.y * this.tileHeight,
-      this.tileWidth * menuWidth,
-      this.tileHeight * menuActions.length,
-      0x888888
-    );
-    menu.setOrigin(0, 0);
-    menu.setDepth(Depth.Menu);
-    menuGroup.add(menu);
-
-    const menuShadow = this.add.rectangle(
-      menuPosition.x * this.tileWidth + 4,
-      menuPosition.y * this.tileHeight + 4,
-      this.tileWidth * menuWidth,
-      this.tileHeight * menuActions.length,
-      0x000000
-    );
-    menuShadow.setAlpha(0.5);
-    menuShadow.setOrigin(0, 0);
-    menuShadow.setDepth(Depth.Menu - 1);
-    menuGroup.add(menuShadow);
-
-    menuActions.forEach((action, index) => {
-      const actionText = this.add.text(
-        menuPosition.x * this.tileWidth + 8 + 16, // first 8 is for the padding, second 16 is space for the cursor
-        menuPosition.y * this.tileHeight + index * this.tileHeight + 8,
-        getActionName(action),
-        {
-          fontFamily: "monospace", // or monospace
-          fontSize: "16px",
-          color: "#ffffff",
-          align: "center",
-          resolution: 4,
-        }
-      );
-      actionText.setOrigin(0, 0);
-      actionText.setDepth(Depth.Menu + 1);
-      menuGroup.add(actionText);
-    });
-
-    const cursor = this.add.triangle(
-      menuPosition.x * this.tileWidth + 8,
-      menuPosition.y * this.tileHeight + cursorIndex * this.tileHeight + 8 + 4,
-      0,
-      0,
-      8,
-      4,
-      0,
-      8,
-      0xffffff
-    );
-    cursor.setName("action-menu-cursor");
-    cursor.setOrigin(0, 0);
-    cursor.setDepth(Depth.Menu + 2);
-    menuGroup.add(cursor);
-
-    this.hasRenderedActionMenu = true;
-    this.hasRenderedActionMenuCursor = true;
-
-    return menuGroup;
-  }
-
-  updateActionMenuCursor() {
-    const actionMenuCursor = this.actionMenuGroup?.children.entries.filter(
-      (child) => child.name === "action-menu-cursor"
-    )[0] as Phaser.GameObjects.Triangle;
-
-    if (!actionMenuCursor) {
-      throw new Error("No action menu cursor");
-    }
-
-    const menuPosition = selectActionMenuPosition(this.store.getState()); // the tile position of the entire menu
-
-    if (!menuPosition) {
-      throw Error("No menu position");
-    }
-
-    const cursorIndex = selectActionMenuCursorIndex(this.store.getState());
-    actionMenuCursor.setPosition(
-      menuPosition.x * this.tileWidth + 8,
-      menuPosition.y * this.tileHeight + cursorIndex * this.tileHeight + 8 + 4
-    );
-
-    this.hasRenderedActionMenuCursor = true;
+    this.actionMenu = new ActionMenuComponent(this.store, this);
   }
 
   clearMove() {
@@ -705,9 +598,9 @@ export class InitialScene extends Phaser.Scene {
     this.movingUnitGroup = null;
     this.hasRenderedMovingUnit = false;
 
-    this.actionMenuGroup?.destroy(true, true);
-    this.actionMenuGroup = null;
     this.hasRenderedActionMenu = false;
+    this.actionMenu?.destroy();
+    this.actionMenu = null;
   }
 }
 
