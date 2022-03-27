@@ -1,8 +1,6 @@
 import { Dictionary, Store } from "@reduxjs/toolkit";
 import {
   haveSamePosition,
-  Position,
-  createTile,
   Tile,
   getTeamColor,
   createRandomInitialUnits,
@@ -10,7 +8,6 @@ import {
   VIEWPORT_HEIGHT,
   getTileId,
   Unit,
-  Colors,
   Team,
   addPositions,
   Depth,
@@ -19,7 +16,6 @@ import {
 } from "../models";
 import {
   selectHoveredUnit,
-  selectCursorPosition,
   selectMapTilesEntities,
   State,
   selectIsHoveringUnit,
@@ -40,10 +36,12 @@ import {
   MapActions,
   UnitsActions,
 } from "../state/reducers";
-import { ActionMenuComponent } from "../components/action-menu/action-menu.component";
-import { CursorComponent } from "../components/cursor/cursor.component";
-import { MapComponent } from "../components/map/map.component";
-import { UnitComponent } from "../components/unit/unit.component";
+import {
+  ActionMenuComponent,
+  CursorComponent,
+  MapComponent,
+  UnitComponent,
+} from "../components";
 
 export class InitialScene extends Phaser.Scene {
   timer = 0;
