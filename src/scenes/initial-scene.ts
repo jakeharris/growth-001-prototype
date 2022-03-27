@@ -42,6 +42,7 @@ import {
 } from "../state/reducers";
 import { ActionMenuComponent } from "../components/action-menu/action-menu.component";
 import { CursorComponent } from "../components/cursor/cursor.component";
+import { MapComponent } from "../components/map/map.component";
 
 export class InitialScene extends Phaser.Scene {
   timer = 0;
@@ -49,6 +50,7 @@ export class InitialScene extends Phaser.Scene {
   height = 17; // in tiles
 
   cursor: CursorComponent | null = null;
+  map: MapComponent | null = null;
 
   hasRenderedHoveredUnit = false;
   renderedHoveredUnit: Unit | null = null;
@@ -162,41 +164,11 @@ export class InitialScene extends Phaser.Scene {
 
   create() {
     this.cursor = new CursorComponent(this.store, this);
-    this.generateMap();
+    this.map = new MapComponent(this.store, this);
     this.generateUnits();
 
     this.configureCamera();
     this.configureInput();
-  }
-
-  generateMap() {
-    const grid = this.add.group();
-    const tiles: Tile[] = [];
-
-    for (let y = 0; y < this.height; y++) {
-      for (let x = 0; x < this.width; x++) {
-        const random = Math.floor(Math.random() * 100);
-        const color = random >= 85 ? 0x0023d8 : 0x00dd00;
-        const traversable = random < 85;
-        const id = getTileId({ x, y });
-
-        const rect = this.add.rectangle(
-          x * TILE_WIDTH,
-          y * TILE_HEIGHT,
-          TILE_WIDTH,
-          TILE_HEIGHT,
-          color
-        );
-        rect.setName(id);
-        rect.setDepth(Depth.Tiles);
-        rect.setOrigin(0, 0);
-
-        grid.add(rect);
-        tiles.push(createTile(id, id, x, y, traversable)); // not sure what the name should actually be
-      }
-    }
-
-    this.store.dispatch(MapActions.createMap({ tiles }));
   }
 
   generateUnits() {
