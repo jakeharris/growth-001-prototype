@@ -13,6 +13,9 @@ import {
   Colors,
   Team,
   addPositions,
+  Depth,
+  TILE_WIDTH,
+  TILE_HEIGHT,
 } from "../models";
 import {
   selectHoveredUnit,
@@ -104,8 +107,8 @@ export class InitialScene extends Phaser.Scene {
     if (this.cursor && cursorHasMoved) {
       this.cursorPosition = newCursorPosition;
       this.cursor.setPosition(
-        newCursorPosition.x * this.tileWidth,
-        newCursorPosition.y * this.tileHeight
+        newCursorPosition.x * TILE_WIDTH,
+        newCursorPosition.y * TILE_HEIGHT
       );
     }
 
@@ -198,13 +201,7 @@ export class InitialScene extends Phaser.Scene {
   }
 
   generateCursor() {
-    const cursor = this.add.rectangle(
-      0,
-      0,
-      this.tileWidth,
-      this.tileHeight,
-      0xffffff
-    );
+    const cursor = this.add.rectangle(0, 0, TILE_WIDTH, TILE_HEIGHT, 0xffffff);
     cursor.setDepth(Depth.Cursor);
     cursor.setOrigin(0, 0);
 
@@ -237,10 +234,10 @@ export class InitialScene extends Phaser.Scene {
         const id = getTileId({ x, y });
 
         const rect = this.add.rectangle(
-          x * this.tileWidth,
-          y * this.tileHeight,
-          this.tileWidth,
-          this.tileHeight,
+          x * TILE_WIDTH,
+          y * TILE_HEIGHT,
+          TILE_WIDTH,
+          TILE_HEIGHT,
           color
         );
         rect.setName(id);
@@ -266,9 +263,9 @@ export class InitialScene extends Phaser.Scene {
       unit.bodyPositions.forEach((bodyPosition) => {
         const absoluteBodyPosition = addPositions(unit.position, bodyPosition);
         const circle = this.add.circle(
-          absoluteBodyPosition.x * this.tileWidth,
-          absoluteBodyPosition.y * this.tileHeight,
-          this.tileWidth / 2,
+          absoluteBodyPosition.x * TILE_WIDTH,
+          absoluteBodyPosition.y * TILE_HEIGHT,
+          TILE_WIDTH / 2,
           getTeamColor(unit.team)
         );
         circle.setDepth(Depth.Units);
@@ -287,28 +284,19 @@ export class InitialScene extends Phaser.Scene {
   configureCamera() {
     const camera = this.cameras.main;
 
-    const zoom = findZoomFactor(
-      this.tileWidth,
-      VIEWPORT_WIDTH,
-      VIEWPORT_HEIGHT
-    );
+    const zoom = findZoomFactor(TILE_WIDTH, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
     camera.setZoom(zoom, zoom);
 
     const [xOffset, yOffset] = findScrollOffsets(
       VIEWPORT_WIDTH,
       VIEWPORT_HEIGHT,
-      this.tileWidth,
-      this.tileHeight,
+      TILE_WIDTH,
+      TILE_HEIGHT,
       zoom
     );
     camera.setScroll(xOffset, yOffset);
 
-    camera.setBounds(
-      0,
-      0,
-      this.width * this.tileWidth,
-      this.height * this.tileHeight
-    );
+    camera.setBounds(0, 0, this.width * TILE_WIDTH, this.height * TILE_HEIGHT);
 
     if (this.cursor)
       camera.startFollow(
@@ -316,8 +304,8 @@ export class InitialScene extends Phaser.Scene {
         false,
         0.1,
         0.1,
-        this.tileWidth / 2,
-        this.tileHeight / 2
+        TILE_WIDTH / 2,
+        TILE_HEIGHT / 2
       );
   }
 
@@ -435,8 +423,8 @@ export class InitialScene extends Phaser.Scene {
             bodyPosition
           );
           sprite.setPosition(
-            absolutePendingBodyPosition.x * this.tileWidth,
-            absolutePendingBodyPosition.y * this.tileHeight
+            absolutePendingBodyPosition.x * TILE_WIDTH,
+            absolutePendingBodyPosition.y * TILE_HEIGHT
           );
           sprite.fillColor = Colors.TurnTaken;
         });
@@ -488,10 +476,10 @@ export class InitialScene extends Phaser.Scene {
       if (!tile) return;
 
       const rect = this.add.rectangle(
-        tile.x * this.tileWidth,
-        tile.y * this.tileHeight,
-        this.tileWidth,
-        this.tileHeight,
+        tile.x * TILE_WIDTH,
+        tile.y * TILE_HEIGHT,
+        TILE_WIDTH,
+        TILE_HEIGHT,
         0x8888ff
       );
       rect.setAlpha(0.7);
@@ -519,9 +507,9 @@ export class InitialScene extends Phaser.Scene {
         bodyPosition
       );
       const spritePosition = this.add.circle(
-        absolutePendingBodyPosition.x * this.tileWidth,
-        absolutePendingBodyPosition.y * this.tileHeight,
-        this.tileWidth / 2,
+        absolutePendingBodyPosition.x * TILE_WIDTH,
+        absolutePendingBodyPosition.y * TILE_HEIGHT,
+        TILE_WIDTH / 2,
         getTeamColor(unit.team)
       );
       spritePosition.setName(`unit-${unit.id}-pending-position`);
