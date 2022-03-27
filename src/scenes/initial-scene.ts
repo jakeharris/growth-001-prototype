@@ -50,8 +50,6 @@ export class InitialScene extends Phaser.Scene {
 
   cursor: CursorComponent | null = null;
 
-  cursorPosition: Position = { x: 0, y: 0 };
-
   hasRenderedHoveredUnit = false;
   renderedHoveredUnit: Unit | null = null;
   hoveredUnitMovementTilesGroup: Phaser.GameObjects.Group | null = null;
@@ -63,8 +61,6 @@ export class InitialScene extends Phaser.Scene {
   selectedUnitMovementTilesGroup: Phaser.GameObjects.Group | null = null;
 
   hasRenderedMovingUnit = false;
-  hasRenderedActionMenu = false;
-  hasRenderedActionMenuCursor = false;
   renderedMovingUnit: Unit | null = null;
   movingUnitGroup: Phaser.GameObjects.Group | null = null;
   actionMenu: ActionMenuComponent | null = null;
@@ -86,13 +82,6 @@ export class InitialScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number) {
-    /**
-     * @todo Candidate for epic?
-     */
-    // handle changes to cursor position
-    const newCursorPosition = selectCursorPosition(this.store.getState());
-    const cursorHasMoved = this.cursorHasMoved(newCursorPosition);
-
     this.cursor?.update();
 
     const isHovering = selectIsHoveringUnit(this.store.getState());
@@ -103,7 +92,6 @@ export class InitialScene extends Phaser.Scene {
     if (
       isSelecting &&
       selectedUnit &&
-      cursorHasMoved &&
       !haveSamePosition(selectedUnit.position, selectedUnit.pendingPosition!)
     ) {
       this.hasRenderedSelectedUnitPendingMovement = false;
@@ -407,14 +395,6 @@ export class InitialScene extends Phaser.Scene {
     });
   }
 
-  cursorHasMoved(newCursorPosition: Position) {
-    return (
-      newCursorPosition &&
-      this.cursorPosition &&
-      !haveSamePosition(newCursorPosition, this.cursorPosition)
-    );
-  }
-
   /**
    * Display a unit's movement range.
    * @param unit The unit to display the movement range for.
@@ -567,7 +547,6 @@ export class InitialScene extends Phaser.Scene {
     this.movingUnitGroup = null;
     this.hasRenderedMovingUnit = false;
 
-    this.hasRenderedActionMenu = false;
     this.actionMenu?.destroy();
     this.actionMenu = null;
   }
