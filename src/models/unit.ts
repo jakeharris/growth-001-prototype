@@ -176,20 +176,23 @@ export function getMovementRangeTileIds(
    * 2. for each movement delta:
    *    2a. check traversability of each tile under the unit in this new configuration
    *    2b. check that no bodyPosition would be out of bounds
-   * 3. for each valid delta, get the map tile at that position
-   * 4. return those map tiles
+   * 3. for each valid delta, get the id of the map tile at that position
+   * 4. de-dupe the resulting array
+   * 4. return those map tile ids
    */
 
   const movementDeltas = getMovementDeltasForUnit(unit);
   const validDeltas = movementDeltas.filter((delta) =>
     isValid(unit, delta, mapWidth, mapHeight, mapTiles)
   );
-  const destinationTiles = validDeltas.map((delta) => {
+  const destinationTileIds = validDeltas.map((delta) => {
     const newPosition = addPositions(unit.position, delta);
     return getTileId(newPosition);
   });
 
-  return destinationTiles;
+  const dedupedDestinationTileIds = [...new Set(destinationTileIds)];
+
+  return dedupedDestinationTileIds;
 }
 
 /**
