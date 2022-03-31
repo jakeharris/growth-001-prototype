@@ -1,16 +1,11 @@
-import { Dictionary, Store } from "@reduxjs/toolkit";
+import { Store } from "@reduxjs/toolkit";
 import {
-  haveSamePosition,
-  Tile,
-  getTeamColor,
   createRandomInitialUnits,
   VIEWPORT_WIDTH,
   VIEWPORT_HEIGHT,
   getTileId,
-  Unit,
   Team,
   addPositions,
-  Depth,
   TILE_WIDTH,
   TILE_HEIGHT,
 } from "../models";
@@ -25,10 +20,8 @@ import {
   selectIsMoving,
   selectMovingUnit,
   selectMovingUnitId,
-  selectSelectedUnitMovementTileIds,
-  selectHoveredUnitMovementTileIds,
-  selectMovingUnitMovementTileIds,
   selectMovementDelta,
+  selectSelectedUnitId,
 } from "../state/reducers/initial-scene";
 import {
   ActionMenuActions,
@@ -42,30 +35,33 @@ import {
   MapComponent,
   UnitComponent,
 } from "../components";
+import { UnitRangeComponent } from "../components/initial-scene/unit-range.component";
+import { UnitPendingPositionComponent } from "../components/initial-scene/unit-pending-position.component";
 
 export class InitialScene extends Phaser.Scene {
   timer = 0;
   width = 20; // in tiles
   height = 17; // in tiles
 
-  cursor: CursorComponent | null = null;
-  map: MapComponent | null = null;
-  units: UnitComponent[] = [];
+  cursorComponent: CursorComponent | null = null;
+  mapComponent: MapComponent | null = null;
+  unitComponents: UnitComponent[] = [];
 
-  hasRenderedHoveredUnit = false;
-  renderedHoveredUnit: Unit | null = null;
-  hoveredUnitMovementTilesGroup: Phaser.GameObjects.Group | null = null;
+  hoveredUnitRangeComponent: UnitRangeComponent | null = null;
 
-  hasRenderedSelectedUnitPendingMovement = false;
-  hasRenderedSelectedUnitMovementRange = false;
-  renderedSelectedUnit: Unit | null = null;
-  selectedUnitPendingMovementGroup: Phaser.GameObjects.Group | null = null;
-  selectedUnitMovementTilesGroup: Phaser.GameObjects.Group | null = null;
+  selectedUnitRangeComponent: UnitRangeComponent | null = null;
+  unitPendingPositionComponent: UnitPendingPositionComponent | null = null;
 
-  hasRenderedMovingUnit = false;
-  renderedMovingUnit: Unit | null = null;
-  movingUnitGroup: Phaser.GameObjects.Group | null = null;
-  actionMenu: ActionMenuComponent | null = null;
+  movingUnitRangeComponent: UnitRangeComponent | null = null;
+  movingUnitPendingPositionComponent: UnitPendingPositionComponent | null =
+    null;
+  actionMenuComponent: ActionMenuComponent | null = null;
+
+  components: Phaser.GameObjects.Container[] = [];
+
+  hasRenderedHovering = false;
+  hasRenderedSelecting = false;
+  hasRenderedMoving = false;
 
   constructor(private store: Store<State>) {
     super({ key: "InitialScene" });
@@ -84,90 +80,102 @@ export class InitialScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number) {
-    this.cursor?.update();
-    this.map?.update();
-    this.units.forEach((unit) => unit.update());
-
-    const isHovering = selectIsHoveringUnit(this.store.getState());
-    const isSelecting = selectIsSelectingUnit(this.store.getState());
-    const isMoving = selectIsMoving(this.store.getState());
-
-    const selectedUnit = selectSelectedUnit(this.store.getState());
     if (
-      isSelecting &&
-      selectedUnit &&
-      !haveSamePosition(selectedUnit.position, selectedUnit.pendingPosition!)
+      this.components.includes(null as unknown as Phaser.GameObjects.Container)
     ) {
-      this.hasRenderedSelectedUnitPendingMovement = false;
+      this.components = this.components.filter((component) => component);
     }
 
-    /**
-     * @todo Candidate for epic?
-     */
-    if (
-      !this.hasRenderedHoveredUnit &&
-      isHovering &&
-      !isSelecting &&
-      !isMoving
-    ) {
-      const hoveredUnit = selectHoveredUnit(this.store.getState());
+    this.components.forEach((component) => component.update());
 
-      if (!hoveredUnit?.hasMoved) this.renderHover();
+    const state = this.store.getState();
+    const isHovering = selectIsHoveringUnit(state);
+    const isSelecting = selectIsSelectingUnit(state);
+    const isMoving = selectIsMoving(state);
+
+    if (isHovering && !this.hasRenderedHovering) {
+      const hoveredUnit = selectHoveredUnit(state)!;
+
+      console.log("hovering unit", hoveredUnit);
+
+      this.hoveredUnitRangeComponent = new UnitRangeComponent(
+        this.store,
+        this,
+        hoveredUnit
+      );
+
+      this.components.push(this.hoveredUnitRangeComponent);
+
+      this.hasRenderedHovering = true;
     }
 
-    /**
-     * @todo Candidate for epic?
-     */
-    if (
-      this.hasRenderedHoveredUnit &&
-      (!isHovering || isSelecting || isMoving)
-    ) {
-      this.clearHover();
+    if (isSelecting && !this.hasRenderedSelecting) {
+      const selectedUnit = selectSelectedUnit(state)!;
+
+      console.log("selecting unit", selectedUnit);
+
+      this.selectedUnitRangeComponent = new UnitRangeComponent(
+        this.store,
+        this,
+        selectedUnit
+      );
+      this.unitPendingPositionComponent = new UnitPendingPositionComponent(
+        this.store,
+        this,
+        selectedUnit
+      );
+
+      this.components.push(this.selectedUnitRangeComponent);
+      this.components.push(this.unitPendingPositionComponent);
+
+      this.hasRenderedSelecting = true;
     }
 
-    /**
-     * @todo Candidate for epic?
-     */
-    if (!this.hasRenderedSelectedUnitMovementRange && isSelecting) {
-      this.renderSelect();
+    if (isMoving && !this.hasRenderedMoving) {
+      const movingUnit = selectMovingUnit(state)!;
+
+      this.movingUnitRangeComponent = new UnitRangeComponent(
+        this.store,
+        this,
+        movingUnit
+      );
+      this.movingUnitPendingPositionComponent =
+        new UnitPendingPositionComponent(this.store, this, movingUnit);
+      this.actionMenuComponent = new ActionMenuComponent(this.store, this);
+
+      this.components.push(this.actionMenuComponent);
+      this.hasRenderedMoving = true;
     }
 
-    if (!this.hasRenderedSelectedUnitPendingMovement && isSelecting) {
-      this.renderSelect();
+    if (!isMoving && this.hasRenderedMoving) {
+      this.movingUnitRangeComponent?.destroy();
+      this.movingUnitPendingPositionComponent?.destroy();
+      this.actionMenuComponent?.destroy();
+
+      this.hasRenderedMoving = false;
     }
 
-    /**
-     * @todo Candidate for epic?
-     */
-    if (
-      (this.hasRenderedSelectedUnitMovementRange ||
-        this.hasRenderedSelectedUnitPendingMovement) &&
-      !isSelecting
-    ) {
-      this.clearSelect();
+    if (!isSelecting && this.hasRenderedSelecting) {
+      this.selectedUnitRangeComponent?.destroy();
+      this.unitPendingPositionComponent?.destroy();
+
+      this.hasRenderedSelecting = false;
     }
 
-    /**
-     * @todo Candidate for epic?
-     */
-    if (!this.hasRenderedMovingUnit && isMoving) {
-      this.renderMove();
-    }
+    if (!isHovering && this.hasRenderedHovering) {
+      this.hoveredUnitRangeComponent?.destroy();
 
-    /**
-     * @todo Candidate for epic?
-     */
-    if (this.hasRenderedMovingUnit && !isMoving) {
-      this.clearMove();
+      this.hasRenderedHovering = false;
     }
-
-    if (this.actionMenu) this.actionMenu.update();
   }
 
   create() {
-    this.cursor = new CursorComponent(this.store, this);
-    this.map = new MapComponent(this.store, this);
-    this.units = this.generateUnits();
+    this.cursorComponent = new CursorComponent(this.store, this);
+    this.mapComponent = new MapComponent(this.store, this);
+    this.unitComponents = this.generateUnits();
+    this.components.push(this.cursorComponent);
+    this.components.push(this.mapComponent);
+    this.components.push(...this.unitComponents);
 
     this.configureCamera();
     this.configureInput();
@@ -203,9 +211,9 @@ export class InitialScene extends Phaser.Scene {
 
     camera.setBounds(0, 0, this.width * TILE_WIDTH, this.height * TILE_HEIGHT);
 
-    if (this.cursor)
+    if (this.cursorComponent)
       camera.startFollow(
-        this.cursor,
+        this.cursorComponent,
         false,
         0.1,
         0.1,
@@ -257,10 +265,6 @@ export class InitialScene extends Phaser.Scene {
           !hoveredUnit.hasMoved
         ) {
           this.store.dispatch(ControlActions.selectUnit(hoveredUnit.id));
-          /**
-           * @todo Candidate for epic?
-           */
-          this.clearSelect();
         }
 
         return;
@@ -288,7 +292,8 @@ export class InitialScene extends Phaser.Scene {
             })
           );
         } else {
-          this.store.dispatch(ControlActions.cancelSelectUnit());
+          const unit = selectSelectedUnit(this.store.getState())!;
+          this.store.dispatch(ControlActions.cancelSelectUnit(unit.id));
         }
 
         return;
@@ -320,170 +325,13 @@ export class InitialScene extends Phaser.Scene {
       const isMoving = selectIsMoving(this.store.getState());
 
       if (isSelecting) {
-        this.store.dispatch(ControlActions.cancelSelectUnit());
-        this.clearSelect();
+        const selectedUnitId = selectSelectedUnitId(this.store.getState())!;
+        this.store.dispatch(ControlActions.cancelSelectUnit(selectedUnitId));
       }
       if (isMoving) {
         this.store.dispatch(ControlActions.cancelMoveUnit());
-        this.clearMove();
       }
     });
-  }
-
-  /**
-   * Display a unit's movement range.
-   * @param unit The unit to display the movement range for.
-   * @param mapTiles The tiles of the current map.
-   */
-  renderMovementRange(
-    unit: Unit,
-    destinationTileIds: string[],
-    mapTiles: Dictionary<Tile>
-  ): Phaser.GameObjects.Group {
-    const movementTilesGroup = this.add
-      .group()
-      .setName(`unit-${unit.id}-movement`);
-
-    destinationTileIds.forEach((tileId) => {
-      const tile = mapTiles[tileId];
-
-      if (!tile) return;
-
-      const rect = this.add.rectangle(
-        tile.x * TILE_WIDTH,
-        tile.y * TILE_HEIGHT,
-        TILE_WIDTH,
-        TILE_HEIGHT,
-        0x8888ff
-      );
-      rect.setAlpha(0.7);
-      rect.setDepth(Depth.Tiles + 1);
-      rect.setOrigin(0, 0);
-      movementTilesGroup.add(rect);
-    });
-
-    return movementTilesGroup;
-  }
-
-  /**
-   * Display a unit's pending movement in the context of their
-   * movement range and current position.
-   * @param unit The unit to display the movement for.
-   * @param mapTiles The tiles of the current map.
-   */
-  renderPendingMovement(unit: Unit): Phaser.GameObjects.Group {
-    const group = this.add.group().setName(`unit-${unit.id}-pending`);
-    if (!unit.pendingPosition) throw Error("Unit has no pending position");
-
-    unit.bodyPositions.forEach((bodyPosition) => {
-      const absolutePendingBodyPosition = addPositions(
-        unit.pendingPosition!,
-        bodyPosition
-      );
-      const spritePosition = this.add.circle(
-        absolutePendingBodyPosition.x * TILE_WIDTH,
-        absolutePendingBodyPosition.y * TILE_HEIGHT,
-        TILE_WIDTH / 2,
-        getTeamColor(unit.team)
-      );
-      spritePosition.setName(`unit-${unit.id}-pending-position`);
-      spritePosition.setAlpha(0.7);
-      spritePosition.setDepth(Depth.Units);
-      spritePosition.setOrigin(0, 0);
-      group.add(spritePosition);
-    });
-
-    return group;
-  }
-
-  clearSelect() {
-    this.selectedUnitMovementTilesGroup?.destroy(true, true);
-    this.selectedUnitMovementTilesGroup = null;
-    this.selectedUnitPendingMovementGroup?.destroy(true, true);
-    this.selectedUnitPendingMovementGroup = null;
-    this.hasRenderedSelectedUnitMovementRange = false;
-    this.hasRenderedSelectedUnitPendingMovement = false;
-  }
-
-  renderSelect() {
-    const mapTiles = selectMapTilesEntities(this.store.getState());
-    const selectedUnit = selectSelectedUnit(this.store.getState());
-    const selectedUnitMovementTileIds = selectSelectedUnitMovementTileIds(
-      this.store.getState()
-    );
-    console.log(`Selected unit:`, selectedUnit);
-    if (!selectedUnit)
-      throw new Error(
-        "tried to render selected unit, but selectedUnit is not defined"
-      );
-
-    if (!this.hasRenderedSelectedUnitMovementRange) {
-      this.selectedUnitMovementTilesGroup = this.renderMovementRange(
-        selectedUnit!,
-        selectedUnitMovementTileIds,
-        mapTiles
-      );
-      this.hasRenderedSelectedUnitMovementRange = true;
-    }
-
-    if (!this.hasRenderedSelectedUnitPendingMovement) {
-      if (this.selectedUnitPendingMovementGroup) {
-        this.selectedUnitPendingMovementGroup.destroy(true, true);
-      }
-
-      this.selectedUnitPendingMovementGroup =
-        this.renderPendingMovement(selectedUnit);
-      this.hasRenderedSelectedUnitPendingMovement = true;
-    }
-  }
-
-  clearHover() {
-    this.hoveredUnitMovementTilesGroup?.destroy(true, true);
-    this.hoveredUnitMovementTilesGroup = null;
-    this.hasRenderedHoveredUnit = false;
-  }
-
-  renderHover() {
-    const mapTiles = selectMapTilesEntities(this.store.getState());
-    const hoveredUnit = selectHoveredUnit(this.store.getState());
-    const hoveredUnitMovementTileIds = selectHoveredUnitMovementTileIds(
-      this.store.getState()
-    );
-    console.log(`Hovered unit:`, hoveredUnit);
-    this.hoveredUnitMovementTilesGroup = this.renderMovementRange(
-      hoveredUnit!,
-      hoveredUnitMovementTileIds,
-      mapTiles
-    );
-    this.hasRenderedHoveredUnit = true;
-  }
-
-  renderMove() {
-    const movingUnit = selectMovingUnit(this.store.getState());
-    const movingUnitMovementTileIds = selectMovingUnitMovementTileIds(
-      this.store.getState()
-    );
-    const mapTiles = selectMapTilesEntities(this.store.getState());
-    console.log(`Moving unit:`, movingUnit);
-    const movementRangeGroup = this.renderMovementRange(
-      movingUnit!,
-      movingUnitMovementTileIds,
-      mapTiles
-    );
-    this.movingUnitGroup = this.renderPendingMovement(movingUnit!);
-    this.movingUnitGroup.addMultiple(movementRangeGroup.getChildren());
-    this.hasRenderedMovingUnit = true;
-
-    this.actionMenu = new ActionMenuComponent(this.store, this);
-  }
-
-  clearMove() {
-    this.movingUnitGroup?.destroy(true, true);
-    this.movingUnitGroup = null;
-    this.hasRenderedMovingUnit = false;
-
-    this.actionMenu?.destroy();
-    this.actionMenu = null;
   }
 }
 
