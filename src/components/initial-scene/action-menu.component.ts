@@ -101,9 +101,12 @@ export class ActionMenuComponent extends Phaser.GameObjects.Container {
     const menuPosition = selectActionMenuPosition(state);
     const cursorIndex = selectActionMenuCursorIndex(state);
 
-    if (!menuPosition) throw Error("No menu position");
+    if (!menuPosition) return;
 
     const cursor = this.getByName("cursor") as Phaser.GameObjects.Triangle;
+
+    if (!cursor) return;
+
     cursor.setPosition(
       menuPosition.x * TILE_WIDTH + 8,
       (menuPosition.y + cursorIndex) * TILE_HEIGHT + 8 + 4
