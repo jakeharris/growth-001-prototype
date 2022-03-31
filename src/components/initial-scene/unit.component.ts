@@ -23,10 +23,9 @@ export class UnitComponent extends Phaser.GameObjects.Container {
     this.setName(`unit-${unit.id}`);
 
     unit.bodyPositions.forEach((bodyPosition) => {
-      const absoluteBodyPosition = addPositions(unit.position, bodyPosition);
       const circle = scene.add.circle(
-        absoluteBodyPosition.x * TILE_WIDTH,
-        absoluteBodyPosition.y * TILE_HEIGHT,
+        bodyPosition.x * TILE_WIDTH,
+        bodyPosition.y * TILE_HEIGHT,
         TILE_WIDTH / 2,
         getTeamColor(unit.team)
       );
@@ -36,13 +35,18 @@ export class UnitComponent extends Phaser.GameObjects.Container {
       this.add(circle);
     });
 
+    this.setPosition(
+      unit.position.x * TILE_WIDTH,
+      unit.position.y * TILE_HEIGHT
+    );
+
     this.setDepth(Depth.Units);
     this.scene.add.existing(this);
   }
 
   update() {
     const state = this.store.getState();
-    if (state) {
+    if (state && this.previousState !== state) {
       this.render(state);
     }
     this.previousState = state;
@@ -61,25 +65,16 @@ export class UnitComponent extends Phaser.GameObjects.Container {
         `body-${bodyPosition.x}-${bodyPosition.y}`
       ) as Phaser.GameObjects.Shape;
 
-      if (!sprite)
-        throw new Error(
-          `tried moving a unit, but couldn\'t find sprite for body position (${bodyPosition.x}, ${bodyPosition.y})`
-        );
-
-      if (unit.pendingPosition) {
-        const absolutePendingBodyPosition = addPositions(
-          unit.pendingPosition,
-          bodyPosition
-        );
-        sprite.setPosition(
-          absolutePendingBodyPosition.x * TILE_WIDTH,
-          absolutePendingBodyPosition.y * TILE_HEIGHT
-        );
-      }
+      sprite.setAlpha(unit.pendingPosition ? 0.5 : 1);
 
       sprite.fillColor = unit.hasMoved
         ? Colors.TurnTaken
         : getTeamColor(unit.team);
     });
+
+    this.setPosition(
+      unit.position.x * TILE_WIDTH,
+      unit.position.y * TILE_HEIGHT
+    );
   }
 }
