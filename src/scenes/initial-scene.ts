@@ -134,6 +134,8 @@ export class InitialScene extends Phaser.Scene {
     if (isMoving && !this.hasRenderedMoving) {
       const movingUnit = selectMovingUnit(state)!;
 
+      console.log("moving unit", movingUnit);
+
       this.movingUnitRangeComponent = new UnitRangeComponent(
         this.store,
         this,
