@@ -1,22 +1,16 @@
-import { Dictionary, Store } from "@reduxjs/toolkit";
+import { Store } from "@reduxjs/toolkit";
 import {
-  haveSamePosition,
-  Position,
-  createTile,
-  Tile,
-  getTeamColor,
   createRandomInitialUnits,
   VIEWPORT_WIDTH,
   VIEWPORT_HEIGHT,
   getTileId,
-  Unit,
-  Colors,
   Team,
   addPositions,
+  TILE_WIDTH,
+  TILE_HEIGHT,
 } from "../models";
 import {
   selectHoveredUnit,
-  selectCursorPosition,
   selectMapTilesEntities,
   State,
   selectIsHoveringUnit,
@@ -26,14 +20,8 @@ import {
   selectIsMoving,
   selectMovingUnit,
   selectMovingUnitId,
-  selectSelectedUnitMovementTileIds,
-  selectHoveredUnitMovementTileIds,
-  selectMovingUnitMovementTileIds,
   selectMovementDelta,
-  selectActionMenuPosition,
-  selectAvailableActions,
-  selectActionMenuWidth,
-  selectActionMenuCursorIndex,
+  selectSelectedUnitId,
 } from "../state/reducers/initial-scene";
 import {
   ActionMenuActions,
@@ -41,42 +29,39 @@ import {
   MapActions,
   UnitsActions,
 } from "../state/reducers";
-import { getActionName } from "../state/reducers/initial-scene/action-menu.state";
-
-const enum Depth {
-  Tiles = 0,
-  Cursor = 5,
-  Units = 10,
-  Menu = 15,
-}
+import {
+  ActionMenuComponent,
+  CursorComponent,
+  MapComponent,
+  UnitComponent,
+} from "../components";
+import { UnitRangeComponent } from "../components/initial-scene/unit-range.component";
+import { UnitPendingPositionComponent } from "../components/initial-scene/unit-pending-position.component";
 
 export class InitialScene extends Phaser.Scene {
   timer = 0;
   width = 20; // in tiles
   height = 17; // in tiles
-  tileWidth = 32;
-  tileHeight = 32;
 
-  cursor: Phaser.GameObjects.Rectangle | null = null;
+  cursorComponent: CursorComponent | null = null;
+  mapComponent: MapComponent | null = null;
+  unitComponents: UnitComponent[] = [];
 
-  cursorPosition: Position = { x: 0, y: 0 };
+  hoveredUnitRangeComponent: UnitRangeComponent | null = null;
 
-  hasRenderedHoveredUnit = false;
-  renderedHoveredUnit: Unit | null = null;
-  hoveredUnitMovementTilesGroup: Phaser.GameObjects.Group | null = null;
+  selectedUnitRangeComponent: UnitRangeComponent | null = null;
+  unitPendingPositionComponent: UnitPendingPositionComponent | null = null;
 
-  hasRenderedSelectedUnitPendingMovement = false;
-  hasRenderedSelectedUnitMovementRange = false;
-  renderedSelectedUnit: Unit | null = null;
-  selectedUnitPendingMovementGroup: Phaser.GameObjects.Group | null = null;
-  selectedUnitMovementTilesGroup: Phaser.GameObjects.Group | null = null;
+  movingUnitRangeComponent: UnitRangeComponent | null = null;
+  movingUnitPendingPositionComponent: UnitPendingPositionComponent | null =
+    null;
+  actionMenuComponent: ActionMenuComponent | null = null;
 
-  hasRenderedMovingUnit = false;
-  hasRenderedActionMenu = false;
-  hasRenderedActionMenuCursor = false;
-  renderedMovingUnit: Unit | null = null;
-  movingUnitGroup: Phaser.GameObjects.Group | null = null;
-  actionMenuGroup: Phaser.GameObjects.Group | null = null;
+  components: Phaser.GameObjects.Container[] = [];
+
+  hasRenderedHovering = false;
+  hasRenderedSelecting = false;
+  hasRenderedMoving = false;
 
   constructor(private store: Store<State>) {
     super({ key: "InitialScene" });
@@ -95,229 +80,145 @@ export class InitialScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number) {
-    /**
-     * @todo Candidate for epic?
-     */
-    // handle changes to cursor position
-    const newCursorPosition = selectCursorPosition(this.store.getState());
-    const cursorHasMoved = this.cursorHasMoved(newCursorPosition);
-    if (this.cursor && cursorHasMoved) {
-      this.cursorPosition = newCursorPosition;
-      this.cursor.setPosition(
-        newCursorPosition.x * this.tileWidth,
-        newCursorPosition.y * this.tileHeight
+    if (
+      this.components.includes(null as unknown as Phaser.GameObjects.Container)
+    ) {
+      this.components = this.components.filter((component) => component);
+    }
+
+    this.components.forEach((component) => component.update());
+
+    const state = this.store.getState();
+    const isHovering = selectIsHoveringUnit(state);
+    const isSelecting = selectIsSelectingUnit(state);
+    const isMoving = selectIsMoving(state);
+
+    if (isHovering && !this.hasRenderedHovering) {
+      const hoveredUnit = selectHoveredUnit(state)!;
+
+      console.log("hovering unit", hoveredUnit);
+
+      this.hoveredUnitRangeComponent = new UnitRangeComponent(
+        this.store,
+        this,
+        hoveredUnit
       );
+
+      this.components.push(this.hoveredUnitRangeComponent);
+
+      this.hasRenderedHovering = true;
     }
 
-    const isHovering = selectIsHoveringUnit(this.store.getState());
-    const isSelecting = selectIsSelectingUnit(this.store.getState());
-    const isMoving = selectIsMoving(this.store.getState());
+    if (isSelecting && !this.hasRenderedSelecting) {
+      const selectedUnit = selectSelectedUnit(state)!;
 
-    const selectedUnit = selectSelectedUnit(this.store.getState());
-    if (
-      isSelecting &&
-      selectedUnit &&
-      cursorHasMoved &&
-      !haveSamePosition(selectedUnit.position, selectedUnit.pendingPosition!)
-    ) {
-      this.hasRenderedSelectedUnitPendingMovement = false;
+      console.log("selecting unit", selectedUnit);
+
+      this.selectedUnitRangeComponent = new UnitRangeComponent(
+        this.store,
+        this,
+        selectedUnit
+      );
+      this.unitPendingPositionComponent = new UnitPendingPositionComponent(
+        this.store,
+        this,
+        selectedUnit
+      );
+
+      this.components.push(this.selectedUnitRangeComponent);
+      this.components.push(this.unitPendingPositionComponent);
+
+      this.hasRenderedSelecting = true;
     }
 
-    /**
-     * @todo Candidate for epic?
-     */
-    if (
-      !this.hasRenderedHoveredUnit &&
-      isHovering &&
-      !isSelecting &&
-      !isMoving
-    ) {
-      const hoveredUnit = selectHoveredUnit(this.store.getState());
+    if (isMoving && !this.hasRenderedMoving) {
+      const movingUnit = selectMovingUnit(state)!;
 
-      if (!hoveredUnit?.hasMoved) this.renderHover();
+      this.movingUnitRangeComponent = new UnitRangeComponent(
+        this.store,
+        this,
+        movingUnit
+      );
+      this.movingUnitPendingPositionComponent =
+        new UnitPendingPositionComponent(this.store, this, movingUnit);
+      this.actionMenuComponent = new ActionMenuComponent(this.store, this);
+
+      this.components.push(this.actionMenuComponent);
+      this.hasRenderedMoving = true;
     }
 
-    /**
-     * @todo Candidate for epic?
-     */
-    if (
-      this.hasRenderedHoveredUnit &&
-      (!isHovering || isSelecting || isMoving)
-    ) {
-      this.clearHover();
+    if (!isMoving && this.hasRenderedMoving) {
+      this.movingUnitRangeComponent?.destroy();
+      this.movingUnitPendingPositionComponent?.destroy();
+      this.actionMenuComponent?.destroy();
+
+      this.hasRenderedMoving = false;
     }
 
-    /**
-     * @todo Candidate for epic?
-     */
-    if (!this.hasRenderedSelectedUnitMovementRange && isSelecting) {
-      this.renderSelect();
+    if (!isSelecting && this.hasRenderedSelecting) {
+      this.selectedUnitRangeComponent?.destroy();
+      this.unitPendingPositionComponent?.destroy();
+
+      this.hasRenderedSelecting = false;
     }
 
-    if (!this.hasRenderedSelectedUnitPendingMovement && isSelecting) {
-      this.renderSelect();
-    }
+    if (!isHovering && this.hasRenderedHovering) {
+      this.hoveredUnitRangeComponent?.destroy();
 
-    /**
-     * @todo Candidate for epic?
-     */
-    if (
-      (this.hasRenderedSelectedUnitMovementRange ||
-        this.hasRenderedSelectedUnitPendingMovement) &&
-      !isSelecting
-    ) {
-      this.clearSelect();
-    }
-
-    /**
-     * @todo Candidate for epic?
-     */
-    if (!this.hasRenderedMovingUnit && isMoving) {
-      this.renderMove();
-    }
-
-    /**
-     * @todo Candidate for epic?
-     */
-    if (this.hasRenderedMovingUnit && !isMoving) {
-      this.clearMove();
-    }
-
-    if (!this.hasRenderedActionMenuCursor && isMoving) {
-      this.updateActionMenuCursor();
+      this.hasRenderedHovering = false;
     }
   }
 
   create() {
-    this.generateCursor();
-    this.generateMap();
-    this.generateUnits();
+    this.cursorComponent = new CursorComponent(this.store, this);
+    this.mapComponent = new MapComponent(this.store, this);
+    this.unitComponents = this.generateUnits();
+    this.components.push(this.cursorComponent);
+    this.components.push(this.mapComponent);
+    this.components.push(...this.unitComponents);
 
     this.configureCamera();
     this.configureInput();
   }
 
-  generateCursor() {
-    const cursor = this.add.rectangle(
-      0,
-      0,
-      this.tileWidth,
-      this.tileHeight,
-      0xffffff
-    );
-    cursor.setDepth(Depth.Cursor);
-    cursor.setOrigin(0, 0);
-
-    this.tweens.add({
-      targets: cursor,
-      alpha: 0.3,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut",
-      duration: 800,
-    });
-
-    this.cursor = cursor;
-    if (!this.cursor) {
-      throw new Error("Cursor is null");
-    }
-
-    this.cursorPosition = selectCursorPosition(this.store.getState());
-  }
-
-  generateMap() {
-    const grid = this.add.group();
-    const tiles: Tile[] = [];
-
-    for (let y = 0; y < this.height; y++) {
-      for (let x = 0; x < this.width; x++) {
-        const random = Math.floor(Math.random() * 100);
-        const color = random >= 85 ? 0x0023d8 : 0x00dd00;
-        const traversable = random < 85;
-        const id = getTileId({ x, y });
-
-        const rect = this.add.rectangle(
-          x * this.tileWidth,
-          y * this.tileHeight,
-          this.tileWidth,
-          this.tileHeight,
-          color
-        );
-        rect.setName(id);
-        rect.setDepth(Depth.Tiles);
-        rect.setOrigin(0, 0);
-
-        grid.add(rect);
-        tiles.push(createTile(id, id, x, y, traversable)); // not sure what the name should actually be
-      }
-    }
-
-    this.store.dispatch(MapActions.createMap({ tiles }));
-  }
-
   generateUnits() {
     const map = selectMapTilesEntities(this.store.getState());
     const units = createRandomInitialUnits(3, this.width, this.height, map);
+    const unitComponents: UnitComponent[] = [];
 
     units.forEach((unit) => {
-      const unitGroup = this.add.group();
-      unitGroup.setName(`unit-${unit.id}`);
-
-      unit.bodyPositions.forEach((bodyPosition) => {
-        const absoluteBodyPosition = addPositions(unit.position, bodyPosition);
-        const circle = this.add.circle(
-          absoluteBodyPosition.x * this.tileWidth,
-          absoluteBodyPosition.y * this.tileHeight,
-          this.tileWidth / 2,
-          getTeamColor(unit.team)
-        );
-        circle.setDepth(Depth.Units);
-        circle.setOrigin(0, 0);
-        circle.setName(
-          `unit-${unit.id}-body-${bodyPosition.x}-${bodyPosition.y}`
-        );
-        circle.setInteractive();
-        unitGroup.add(circle);
-      });
+      unitComponents.push(new UnitComponent(this.store, this, unit));
     });
 
     this.store.dispatch(UnitsActions.createUnits({ units }));
+    return unitComponents;
   }
 
   configureCamera() {
     const camera = this.cameras.main;
 
-    const zoom = findZoomFactor(
-      this.tileWidth,
-      VIEWPORT_WIDTH,
-      VIEWPORT_HEIGHT
-    );
+    const zoom = findZoomFactor(TILE_WIDTH, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
     camera.setZoom(zoom, zoom);
 
     const [xOffset, yOffset] = findScrollOffsets(
       VIEWPORT_WIDTH,
       VIEWPORT_HEIGHT,
-      this.tileWidth,
-      this.tileHeight,
+      TILE_WIDTH,
+      TILE_HEIGHT,
       zoom
     );
     camera.setScroll(xOffset, yOffset);
 
-    camera.setBounds(
-      0,
-      0,
-      this.width * this.tileWidth,
-      this.height * this.tileHeight
-    );
+    camera.setBounds(0, 0, this.width * TILE_WIDTH, this.height * TILE_HEIGHT);
 
-    if (this.cursor)
+    if (this.cursorComponent)
       camera.startFollow(
-        this.cursor,
+        this.cursorComponent,
         false,
         0.1,
         0.1,
-        this.tileWidth / 2,
-        this.tileHeight / 2
+        TILE_WIDTH / 2,
+        TILE_HEIGHT / 2
       );
   }
 
@@ -329,7 +230,6 @@ export class InitialScene extends Phaser.Scene {
         this.store.dispatch(ControlActions.moveCursor({ x: 0, y: 1 }));
       } else {
         this.store.dispatch(ActionMenuActions.moveCursorDown());
-        this.hasRenderedActionMenuCursor = false;
       }
     });
     this.input.keyboard.on("keydown-UP", () => {
@@ -338,7 +238,6 @@ export class InitialScene extends Phaser.Scene {
         this.store.dispatch(ControlActions.moveCursor({ x: 0, y: -1 }));
       } else {
         this.store.dispatch(ActionMenuActions.moveCursorUp());
-        this.hasRenderedActionMenuCursor = false;
       }
     });
     this.input.keyboard.on("keydown-LEFT", () => {
@@ -366,10 +265,6 @@ export class InitialScene extends Phaser.Scene {
           !hoveredUnit.hasMoved
         ) {
           this.store.dispatch(ControlActions.selectUnit(hoveredUnit.id));
-          /**
-           * @todo Candidate for epic?
-           */
-          this.clearSelect();
         }
 
         return;
@@ -397,7 +292,8 @@ export class InitialScene extends Phaser.Scene {
             })
           );
         } else {
-          this.store.dispatch(ControlActions.cancelSelectUnit());
+          const unit = selectSelectedUnit(this.store.getState())!;
+          this.store.dispatch(ControlActions.cancelSelectUnit(unit.id));
         }
 
         return;
@@ -420,27 +316,6 @@ export class InitialScene extends Phaser.Scene {
             "tried moving a unit but unit.pendingPosition is null"
           );
 
-        unit.bodyPositions.forEach((bodyPosition) => {
-          const sprite = this.children.getByName(
-            `unit-${unitId}-body-${bodyPosition.x}-${bodyPosition.y}`
-          ) as Phaser.GameObjects.Shape;
-
-          if (!sprite)
-            throw new Error(
-              `tried moving a unit, but couldn\'t find sprite for body position (${bodyPosition.x}, ${bodyPosition.y})`
-            );
-
-          const absolutePendingBodyPosition = addPositions(
-            unit.pendingPosition!,
-            bodyPosition
-          );
-          sprite.setPosition(
-            absolutePendingBodyPosition.x * this.tileWidth,
-            absolutePendingBodyPosition.y * this.tileHeight
-          );
-          sprite.fillColor = Colors.TurnTaken;
-        });
-
         this.store.dispatch(ControlActions.confirmMoveUnit({ unitId }));
       }
     });
@@ -450,276 +325,13 @@ export class InitialScene extends Phaser.Scene {
       const isMoving = selectIsMoving(this.store.getState());
 
       if (isSelecting) {
-        this.store.dispatch(ControlActions.cancelSelectUnit());
-        this.clearSelect();
+        const selectedUnitId = selectSelectedUnitId(this.store.getState())!;
+        this.store.dispatch(ControlActions.cancelSelectUnit(selectedUnitId));
       }
       if (isMoving) {
         this.store.dispatch(ControlActions.cancelMoveUnit());
-        this.clearMove();
       }
     });
-  }
-
-  cursorHasMoved(newCursorPosition: Position) {
-    return (
-      newCursorPosition &&
-      this.cursorPosition &&
-      !haveSamePosition(newCursorPosition, this.cursorPosition)
-    );
-  }
-
-  /**
-   * Display a unit's movement range.
-   * @param unit The unit to display the movement range for.
-   * @param mapTiles The tiles of the current map.
-   */
-  renderMovementRange(
-    unit: Unit,
-    destinationTileIds: string[],
-    mapTiles: Dictionary<Tile>
-  ): Phaser.GameObjects.Group {
-    const movementTilesGroup = this.add
-      .group()
-      .setName(`unit-${unit.id}-movement`);
-
-    destinationTileIds.forEach((tileId) => {
-      const tile = mapTiles[tileId];
-
-      if (!tile) return;
-
-      const rect = this.add.rectangle(
-        tile.x * this.tileWidth,
-        tile.y * this.tileHeight,
-        this.tileWidth,
-        this.tileHeight,
-        0x8888ff
-      );
-      rect.setAlpha(0.7);
-      rect.setDepth(Depth.Tiles + 1);
-      rect.setOrigin(0, 0);
-      movementTilesGroup.add(rect);
-    });
-
-    return movementTilesGroup;
-  }
-
-  /**
-   * Display a unit's pending movement in the context of their
-   * movement range and current position.
-   * @param unit The unit to display the movement for.
-   * @param mapTiles The tiles of the current map.
-   */
-  renderPendingMovement(unit: Unit): Phaser.GameObjects.Group {
-    const group = this.add.group().setName(`unit-${unit.id}-pending`);
-    if (!unit.pendingPosition) throw Error("Unit has no pending position");
-
-    unit.bodyPositions.forEach((bodyPosition) => {
-      const absolutePendingBodyPosition = addPositions(
-        unit.pendingPosition!,
-        bodyPosition
-      );
-      const spritePosition = this.add.circle(
-        absolutePendingBodyPosition.x * this.tileWidth,
-        absolutePendingBodyPosition.y * this.tileHeight,
-        this.tileWidth / 2,
-        getTeamColor(unit.team)
-      );
-      spritePosition.setName(`unit-${unit.id}-pending-position`);
-      spritePosition.setAlpha(0.7);
-      spritePosition.setDepth(Depth.Units);
-      spritePosition.setOrigin(0, 0);
-      group.add(spritePosition);
-    });
-
-    return group;
-  }
-
-  clearSelect() {
-    this.selectedUnitMovementTilesGroup?.destroy(true, true);
-    this.selectedUnitMovementTilesGroup = null;
-    this.selectedUnitPendingMovementGroup?.destroy(true, true);
-    this.selectedUnitPendingMovementGroup = null;
-    this.hasRenderedSelectedUnitMovementRange = false;
-    this.hasRenderedSelectedUnitPendingMovement = false;
-  }
-
-  renderSelect() {
-    if (this.cursor) this.cursor.fillColor = 0xdddd00;
-    const mapTiles = selectMapTilesEntities(this.store.getState());
-    const selectedUnit = selectSelectedUnit(this.store.getState());
-    const selectedUnitMovementTileIds = selectSelectedUnitMovementTileIds(
-      this.store.getState()
-    );
-    console.log(`Selected unit:`, selectedUnit);
-    if (!selectedUnit)
-      throw new Error(
-        "tried to render selected unit, but selectedUnit is not defined"
-      );
-
-    if (!this.hasRenderedSelectedUnitMovementRange) {
-      this.selectedUnitMovementTilesGroup = this.renderMovementRange(
-        selectedUnit!,
-        selectedUnitMovementTileIds,
-        mapTiles
-      );
-      this.hasRenderedSelectedUnitMovementRange = true;
-    }
-
-    if (!this.hasRenderedSelectedUnitPendingMovement) {
-      if (this.selectedUnitPendingMovementGroup) {
-        this.selectedUnitPendingMovementGroup.destroy(true, true);
-      }
-
-      this.selectedUnitPendingMovementGroup =
-        this.renderPendingMovement(selectedUnit);
-      this.hasRenderedSelectedUnitPendingMovement = true;
-    }
-  }
-
-  clearHover() {
-    this.hoveredUnitMovementTilesGroup?.destroy(true, true);
-    this.hoveredUnitMovementTilesGroup = null;
-    this.hasRenderedHoveredUnit = false;
-  }
-
-  renderHover() {
-    const mapTiles = selectMapTilesEntities(this.store.getState());
-    const hoveredUnit = selectHoveredUnit(this.store.getState());
-    const hoveredUnitMovementTileIds = selectHoveredUnitMovementTileIds(
-      this.store.getState()
-    );
-    console.log(`Hovered unit:`, hoveredUnit);
-    this.hoveredUnitMovementTilesGroup = this.renderMovementRange(
-      hoveredUnit!,
-      hoveredUnitMovementTileIds,
-      mapTiles
-    );
-    this.hasRenderedHoveredUnit = true;
-  }
-
-  renderMove() {
-    const movingUnit = selectMovingUnit(this.store.getState());
-    const movingUnitMovementTileIds = selectMovingUnitMovementTileIds(
-      this.store.getState()
-    );
-    const mapTiles = selectMapTilesEntities(this.store.getState());
-    console.log(`Moving unit:`, movingUnit);
-    const movementRangeGroup = this.renderMovementRange(
-      movingUnit!,
-      movingUnitMovementTileIds,
-      mapTiles
-    );
-    this.movingUnitGroup = this.renderPendingMovement(movingUnit!);
-    this.movingUnitGroup.addMultiple(movementRangeGroup.getChildren());
-    this.hasRenderedMovingUnit = true;
-
-    this.actionMenuGroup = this.renderActionMenu();
-  }
-
-  renderActionMenu() {
-    const menuGroup = this.add.group().setName("move-menu");
-    const menuPosition = selectActionMenuPosition(this.store.getState());
-    const menuWidth = selectActionMenuWidth(this.store.getState());
-    const menuActions = selectAvailableActions(this.store.getState());
-    const cursorIndex = selectActionMenuCursorIndex(this.store.getState());
-
-    if (!menuPosition) throw Error("No menu position");
-
-    const menu = this.add.rectangle(
-      menuPosition.x * this.tileWidth,
-      menuPosition.y * this.tileHeight,
-      this.tileWidth * menuWidth,
-      this.tileHeight * menuActions.length,
-      0x888888
-    );
-    menu.setOrigin(0, 0);
-    menu.setDepth(Depth.Menu);
-    menuGroup.add(menu);
-
-    const menuShadow = this.add.rectangle(
-      menuPosition.x * this.tileWidth + 4,
-      menuPosition.y * this.tileHeight + 4,
-      this.tileWidth * menuWidth,
-      this.tileHeight * menuActions.length,
-      0x000000
-    );
-    menuShadow.setAlpha(0.5);
-    menuShadow.setOrigin(0, 0);
-    menuShadow.setDepth(Depth.Menu - 1);
-    menuGroup.add(menuShadow);
-
-    menuActions.forEach((action, index) => {
-      const actionText = this.add.text(
-        menuPosition.x * this.tileWidth + 8 + 16, // first 8 is for the padding, second 16 is space for the cursor
-        menuPosition.y * this.tileHeight + index * this.tileHeight + 8,
-        getActionName(action),
-        {
-          fontFamily: "monospace", // or monospace
-          fontSize: "16px",
-          color: "#ffffff",
-          align: "center",
-          resolution: 4,
-        }
-      );
-      actionText.setOrigin(0, 0);
-      actionText.setDepth(Depth.Menu + 1);
-      menuGroup.add(actionText);
-    });
-
-    const cursor = this.add.triangle(
-      menuPosition.x * this.tileWidth + 8,
-      menuPosition.y * this.tileHeight + cursorIndex * this.tileHeight + 8 + 4,
-      0,
-      0,
-      8,
-      4,
-      0,
-      8,
-      0xffffff
-    );
-    cursor.setName("action-menu-cursor");
-    cursor.setOrigin(0, 0);
-    cursor.setDepth(Depth.Menu + 2);
-    menuGroup.add(cursor);
-
-    this.hasRenderedActionMenu = true;
-    this.hasRenderedActionMenuCursor = true;
-
-    return menuGroup;
-  }
-
-  updateActionMenuCursor() {
-    const actionMenuCursor = this.actionMenuGroup?.children.entries.filter(
-      (child) => child.name === "action-menu-cursor"
-    )[0] as Phaser.GameObjects.Triangle;
-
-    if (!actionMenuCursor) {
-      throw new Error("No action menu cursor");
-    }
-
-    const menuPosition = selectActionMenuPosition(this.store.getState()); // the tile position of the entire menu
-
-    if (!menuPosition) {
-      throw Error("No menu position");
-    }
-
-    const cursorIndex = selectActionMenuCursorIndex(this.store.getState());
-    actionMenuCursor.setPosition(
-      menuPosition.x * this.tileWidth + 8,
-      menuPosition.y * this.tileHeight + cursorIndex * this.tileHeight + 8 + 4
-    );
-
-    this.hasRenderedActionMenuCursor = true;
-  }
-
-  clearMove() {
-    this.movingUnitGroup?.destroy(true, true);
-    this.movingUnitGroup = null;
-    this.hasRenderedMovingUnit = false;
-
-    this.actionMenuGroup?.destroy(true, true);
-    this.actionMenuGroup = null;
-    this.hasRenderedActionMenu = false;
   }
 }
 

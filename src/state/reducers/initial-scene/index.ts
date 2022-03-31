@@ -93,10 +93,6 @@ export const selectHoveredUnitMovementTileIds = createSelector(
   (unit, width, height, mapTiles) =>
     unit ? getMovementRangeTileIds(unit, width, height, mapTiles) : []
 );
-export const selectIsHoveringUnit = createSelector(
-  selectHoveredUnit,
-  (hoveredUnit) => hoveredUnit !== undefined
-);
 export const selectSelectedUnitId = createSelector(
   selectControlState,
   ControlState.selectSelectedUnitId
@@ -106,6 +102,15 @@ export const selectSelectedUnit = createSelector(
   selectUnits,
   (selectedUnitId, units) => units.find((unit) => unit.id === selectedUnitId)
 );
+export const selectIsHoveringUnit = createSelector(
+  selectHoveredUnit,
+  selectSelectedUnit,
+  (hoveredUnit, selectedUnit) =>
+    hoveredUnit !== undefined &&
+    !hoveredUnit.hasMoved &&
+    selectedUnit === undefined
+);
+
 /**
  * @todo Should we just determine the selected unit's movement range?
  * Or should we calculate them all at once and return user viewmodels?
