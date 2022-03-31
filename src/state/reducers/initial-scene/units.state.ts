@@ -40,6 +40,21 @@ const slice = createSlice({
       });
     });
 
+    builder.addCase(ControlActions.cancelSelectUnit, (state, action) => {
+      const unitId = action.payload;
+
+      const unit = state.entities[unitId];
+
+      if (!unit) return state;
+
+      return adapter.updateOne(state, {
+        id: unitId,
+        changes: {
+          pendingPosition: null,
+        },
+      });
+    });
+
     builder.addCase(ControlActions.planMoveUnit, (state, action) => {
       const { unitId, x, y } = action.payload;
       const unit = selectEntities(state)[unitId];

@@ -35,7 +35,7 @@ export const slice = createSlice({
       selectedUnitId: action.payload,
       moveSourcePosition: state.cursorPosition,
     }),
-    cancelSelectUnit: (state) => ({
+    cancelSelectUnit: (state, action: PayloadAction<string>) => ({
       ...state,
       selectedUnitId: null,
       moveSourcePosition: null,
