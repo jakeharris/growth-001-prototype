@@ -84,7 +84,8 @@ export class ActionMenuComponent extends Phaser.GameObjects.Container {
     this.add(cursor);
 
     this.setDepth(Depth.Menu);
-    this.scene = scene;
+    this.setName("action-menu");
+
     this.scene.add.existing(this);
   }
 
