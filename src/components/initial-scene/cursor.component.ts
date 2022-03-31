@@ -40,13 +40,14 @@ export class CursorComponent extends Phaser.GameObjects.Container {
   }
 
   render(state: State) {
-    const cursor = this.getByName("cursor") as Phaser.GameObjects.Rectangle;
-
     const { x, y } = selectCursorPosition(state);
     const isSelecting = selectIsSelectingUnit(state);
     const isMoving = selectIsMoving(state);
+    const cursorSprite = this.getByName(
+      "cursor"
+    ) as Phaser.GameObjects.Rectangle;
 
-    cursor.setPosition(x * TILE_WIDTH, y * TILE_HEIGHT);
-    cursor.setFillStyle(isSelecting || isMoving ? 0xdddd00 : 0xffffff);
+    this.setPosition(x * TILE_WIDTH, y * TILE_HEIGHT);
+    cursorSprite.setFillStyle(isSelecting || isMoving ? 0xdddd00 : 0xffffff);
   }
 }
