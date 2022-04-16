@@ -1,7 +1,7 @@
 import { Store } from "@reduxjs/toolkit";
 import {
   Depth,
-  getMovementRangeTileIds,
+  getUnitRangeTileIds as getUnitRangeTiles,
   TILE_HEIGHT,
   TILE_WIDTH,
   Unit,
@@ -27,15 +27,10 @@ export class UnitRangeComponent extends Phaser.GameObjects.Container {
     const mapHeight = selectMapHeight(state);
     const mapTiles = selectMapTilesEntities(state);
 
-    const destinationTileIds = getMovementRangeTileIds(
-      unit,
-      mapWidth,
-      mapHeight,
-      mapTiles
-    );
+    const rangeTiles = getUnitRangeTiles(unit, mapWidth, mapHeight, mapTiles);
 
-    destinationTileIds.forEach((tileId) => {
-      const tile = mapTiles[tileId];
+    rangeTiles.forEach((rangeTile) => {
+      const tile = mapTiles[rangeTile.id];
 
       if (!tile) return;
 
@@ -44,7 +39,7 @@ export class UnitRangeComponent extends Phaser.GameObjects.Container {
         tile.y * TILE_HEIGHT,
         TILE_WIDTH,
         TILE_HEIGHT,
-        0x8888ff
+        rangeTile.isMovementTile ? 0x8888ff : 0xff8888
       );
       rect.setAlpha(0.7);
       rect.setDepth(Depth.Tiles + 1);

@@ -25,6 +25,8 @@ export interface Unit {
   defense: number;
   speed: number;
   range: number;
+  attackRangeMin: number;
+  attackRangeMax: number;
 
   hasMoved: boolean;
 
@@ -60,6 +62,9 @@ export function getTeamColor(team: Team) {
 }
 
 export function createUnit(updates?: Partial<Unit>): Unit {
+  const randomAttackRangeMinimum = Math.ceil(Math.random() * 3);
+  const randomAttackRangeMaximum =
+    randomAttackRangeMinimum + Math.round(Math.random());
   return {
     id: Math.random() * 1e16 + "",
     name: "Absolute Unit",
@@ -73,6 +78,9 @@ export function createUnit(updates?: Partial<Unit>): Unit {
     defense: 1,
     speed: 1,
     range: 4,
+
+    attackRangeMin: randomAttackRangeMinimum,
+    attackRangeMax: randomAttackRangeMaximum,
 
     hasMoved: false,
 
@@ -151,6 +159,11 @@ export function createRandomInitialUnits(
   return units;
 }
 
+type RangeTile = {
+  id: string;
+  isMovementTile: boolean;
+};
+
 /**
  * @param mapTiles The tiles of the map
  * @param mapWidth The width of the map, in tiles
@@ -158,12 +171,12 @@ export function createRandomInitialUnits(
  * @param unit The unit to get the destination tiles for
  * @returns an array of the ids of all tiles that are within the unit's range
  */
-export function getMovementRangeTileIds(
+export function getUnitRangeTileIds(
   unit: Unit,
   mapWidth: number,
   mapHeight: number,
   mapTiles: Dictionary<Tile>
-): string[] {
+): RangeTile[] {
   /**
    * @todo, probably -- optimize this
    * @todo Add check for whether any bodyPosition would collide with another unit
@@ -177,22 +190,41 @@ export function getMovementRangeTileIds(
    *    2a. check traversability of each tile under the unit in this new configuration
    *    2b. check that no bodyPosition would be out of bounds
    * 3. for each valid delta, get the id of the map tile at that position
-   * 4. de-dupe the resulting array
-   * 4. return those map tile ids
+   * 4. then, for that id, get all attackable squares
+   * 5. de-dupe the resulting array
+   * 6. enrich the resulting array as follows:
+   *    6a. if an tile-id is a valid destination tile, mark it as a movement tile
+   *    6b. otherwise, mark it as an attack tile
+   * 6. return those enriched map tile ids
    */
 
   const movementDeltas = getMovementDeltasForUnit(unit);
-  const validDeltas = movementDeltas.filter((delta) =>
+  const attackDeltas = getAttackDeltasForUnit(unit);
+  const validMoves = movementDeltas.filter((delta) =>
     isValid(unit, delta, mapWidth, mapHeight, mapTiles)
   );
-  const destinationTileIds = validDeltas.map((delta) => {
-    const newPosition = addPositions(unit.position, delta);
-    return getTileId(newPosition);
-  });
+  const destinationPositions = validMoves.map((move) =>
+    addPositions(unit.position, move)
+  );
+  const destinationTileIds = destinationPositions.map((destinationPosition) =>
+    getTileId(destinationPosition)
+  );
+  const attackablePositions = destinationPositions.flatMap(
+    (destinationPosition) => applyDeltas(destinationPosition, attackDeltas)
+  );
+  const attackableTileIds = attackablePositions.map((position) =>
+    getTileId(position)
+  );
+  const allTileIds = [...destinationTileIds, ...attackableTileIds];
 
-  const dedupedDestinationTileIds = [...new Set(destinationTileIds)];
+  const dedupedDestinationTileIds = [...new Set(allTileIds)];
 
-  return dedupedDestinationTileIds;
+  const displayRangeTileIds = dedupedDestinationTileIds.map((id) => ({
+    id,
+    isMovementTile: destinationTileIds.includes(id),
+  }));
+
+  return displayRangeTileIds;
 }
 
 /**
@@ -238,6 +270,36 @@ function getMovementDeltasForUnit(unit: Unit): Position[] {
   // const dedupedMovementDeltas = dedupePositions(allMovementDeltas);
 
   return allMovementDeltas;
+}
+
+function getAttackDeltasForRange(min: number, max: number) {
+  let attackDeltas: Position[] = [];
+
+  for (let x = -max; x <= max; x++) {
+    for (let y = -max; y <= max; y++) {
+      const straightLineDistance = Math.abs(x) + Math.abs(y);
+      const isWithinStraightLineRange =
+        straightLineDistance >= min && straightLineDistance <= max;
+
+      if (!isWithinStraightLineRange) continue;
+
+      attackDeltas.push({ x, y });
+    }
+  }
+
+  return attackDeltas;
+}
+
+function getAttackDeltasForUnit(unit: Unit): Position[] {
+  const relativeAttackDeltas = getAttackDeltasForRange(
+    unit.attackRangeMin,
+    unit.attackRangeMax
+  );
+  const allAttackDeltas = unit.bodyPositions.flatMap((position) =>
+    applyDeltas(position, relativeAttackDeltas)
+  );
+
+  return allAttackDeltas;
 }
 
 function applyDeltas(position: Position, deltas: Position[]): Position[] {

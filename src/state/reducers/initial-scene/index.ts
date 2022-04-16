@@ -6,7 +6,7 @@ import * as ActionMenuState from "./action-menu.state";
 import {
   getAbsoluteBodyPositions,
   getDestinationPositions,
-  getMovementRangeTileIds,
+  getUnitRangeTileIds,
   getTileId,
   haveSamePosition,
   subtractPositions,
@@ -91,7 +91,7 @@ export const selectHoveredUnitMovementTileIds = createSelector(
   selectMapHeight,
   selectMapTilesEntities,
   (unit, width, height, mapTiles) =>
-    unit ? getMovementRangeTileIds(unit, width, height, mapTiles) : []
+    unit ? getUnitRangeTileIds(unit, width, height, mapTiles) : []
 );
 export const selectSelectedUnitId = createSelector(
   selectControlState,
@@ -121,7 +121,7 @@ export const selectSelectedUnitMovementTileIds = createSelector(
   selectMapHeight,
   selectMapTilesEntities,
   (unit, width, height, mapTiles) =>
-    unit ? getMovementRangeTileIds(unit, width, height, mapTiles) : []
+    unit ? getUnitRangeTileIds(unit, width, height, mapTiles) : []
 );
 export const selectIsSelectingUnit = createSelector(
   selectControlState,
@@ -211,7 +211,7 @@ export const selectMovingUnitMovementTileIds = createSelector(
   selectMapHeight,
   selectMapTilesEntities,
   (unit, width, height, mapTiles) =>
-    unit ? getMovementRangeTileIds(unit, width, height, mapTiles) : []
+    unit ? getUnitRangeTileIds(unit, width, height, mapTiles) : []
 );
 export const selectPreviousUnitPosition = createSelector(
   selectMovingUnit,
