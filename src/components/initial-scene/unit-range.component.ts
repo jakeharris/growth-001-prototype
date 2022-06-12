@@ -2,6 +2,7 @@ import { Store } from "@reduxjs/toolkit";
 import {
   Depth,
   getUnitRangeTileIds as getUnitRangeTiles,
+  RangeTileType,
   TILE_HEIGHT,
   TILE_WIDTH,
   Unit,
@@ -39,7 +40,7 @@ export class UnitRangeComponent extends Phaser.GameObjects.Container {
         tile.y * TILE_HEIGHT,
         TILE_WIDTH,
         TILE_HEIGHT,
-        rangeTile.isMovementTile ? 0x8888ff : 0xff8888
+        rangeTile.type === RangeTileType.Movement ? 0x8888ff : 0xff8888
       );
       rect.setAlpha(0.7);
       rect.setDepth(Depth.Tiles + 1);

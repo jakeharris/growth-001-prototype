@@ -1,6 +1,6 @@
 import { Dictionary } from "@reduxjs/toolkit";
 import { addPositions, Position } from ".";
-import { Tile, getTileId, getPositionFromTileId } from "./tile";
+import { Tile, getTileId } from "./tile";
 
 export interface Unit {
   id: string;
@@ -159,10 +159,16 @@ export function createRandomInitialUnits(
   return units;
 }
 
-type RangeTile = {
+export const enum RangeTileType {
+  Movement,
+  Attack,
+  Healing,
+}
+
+export type RangeTile = {
   id: string;
   position: Position;
-  isMovementTile: boolean;
+  type: RangeTileType;
 };
 
 /**
@@ -199,34 +205,33 @@ export function getUnitRangeTileIds(
    * 6. return those enriched map tile ids
    */
 
-  const movementDeltas = getMovementDeltasForUnit(unit);
-  const attackDeltas = getAttackDeltasForUnit(unit);
-  const validMoves = movementDeltas.filter((delta) =>
-    isValid(unit, delta, mapWidth, mapHeight, mapTiles)
+  const validMovementTiles = getValidMovementTilesForUnit(
+    unit,
+    mapWidth,
+    mapHeight,
+    mapTiles
   );
-  const destinationPositions = validMoves.map((move) =>
-    addPositions(unit.position, move)
-  );
-  const destinationTileIds = destinationPositions.map((destinationPosition) =>
-    getTileId(destinationPosition)
-  );
-  const attackablePositions = destinationPositions.flatMap(
-    (destinationPosition) => applyDeltas(destinationPosition, attackDeltas)
-  );
-  const attackableTileIds = attackablePositions.map((position) =>
-    getTileId(position)
-  );
-  const allTileIds = [...destinationTileIds, ...attackableTileIds];
 
-  const dedupedDestinationTileIds = [...new Set(allTileIds)];
+  const validAttackableTiles = getValidAttackableTilesForUnitAtPositions(
+    unit,
+    validMovementTiles.map((tile) => tile.position),
+    mapWidth,
+    mapHeight
+  );
 
-  const displayRangeTileIds = dedupedDestinationTileIds.map((id) => ({
-    id,
-    position: getPositionFromTileId(id),
-    isMovementTile: destinationTileIds.includes(id),
-  }));
+  // if a space appears in both validMovementTiles and validAttackableTiles, we display a movement tile
+  const attackableTilesToDisplay = validAttackableTiles.filter(
+    (attackableTile) =>
+      !validMovementTiles.some(
+        (movementTile) =>
+          movementTile.position.x === attackableTile.position.x &&
+          movementTile.position.y === attackableTile.position.y
+      )
+  );
 
-  return displayRangeTileIds;
+  const tilesToDisplay = [...validMovementTiles, ...attackableTilesToDisplay];
+
+  return tilesToDisplay;
 }
 
 /**
@@ -274,6 +279,45 @@ function getMovementDeltasForUnit(unit: Unit): Position[] {
   return allMovementDeltas;
 }
 
+/**
+ * Helper function that generates all possible movement tiles for a given unit.
+ * Considers bounds, traversability, and distance. De-dupes repeats, to handle
+ * cases where a unit has multiple bodyPositions.
+ * @param unit The unit we're examining.
+ * @param mapWidth
+ * @param mapHeight
+ * @param mapTiles
+ * @returns A RangeTile[] of all valid movement tiles for this unit.
+ */
+function getValidMovementTilesForUnit(
+  unit: Unit,
+  mapWidth: number,
+  mapHeight: number,
+  mapTiles: Dictionary<Tile>
+): RangeTile[] {
+  const movementDeltas = getMovementDeltasForUnit(unit);
+  const validMovementDeltas = movementDeltas.filter((delta) =>
+    isValidDestinationTile(unit, delta, mapWidth, mapHeight, mapTiles)
+  );
+  const validMovementPositions = validMovementDeltas.map((delta) =>
+    addPositions(unit.position, delta)
+  );
+  const validMovementTiles = validMovementPositions.map((position) => ({
+    id: getTileId(position),
+    position,
+    type: RangeTileType.Movement,
+  }));
+
+  // de-duplicate valid movement tiles by id
+  const dedupedValidMovementTiles = [
+    ...new Set(validMovementTiles.map((tile) => tile.id)),
+  ]
+    .map((id) => validMovementTiles.find((tile) => tile.id === id))
+    .filter((tile): tile is RangeTile => typeof tile !== "undefined");
+
+  return dedupedValidMovementTiles;
+}
+
 function getAttackDeltasForRange(min: number, max: number) {
   let attackDeltas: Position[] = [];
 
@@ -304,11 +348,89 @@ function getAttackDeltasForUnit(unit: Unit): Position[] {
   return allAttackDeltas;
 }
 
+/**
+ * Helper function that generates all valid attackable tiles for a given unit.
+ * Considers bounds, traversability, and distance. De-dupes repeats, to handle
+ * cases where a unit has multiple bodyPositions.
+ *
+ * Note: only considers the unit's current position.
+ * @param unit The unit we're examining.
+ * @param mapWidth
+ * @param mapHeight
+ * @param mapTiles
+ * @returns A RangeTile[] of all valid attackable tiles for this unit at its current position.
+ */
+function getValidAttackableTilesForUnit(
+  unit: Unit,
+  mapWidth: number,
+  mapHeight: number
+): RangeTile[] {
+  const attackDeltas = getAttackDeltasForUnit(unit);
+  const attackPositions = attackDeltas.map((delta) =>
+    addPositions(unit.position, delta)
+  );
+  const validAttackPositions = attackPositions.filter((position) =>
+    isValidAttackableTile(position, mapWidth, mapHeight)
+  );
+  const attackTiles = validAttackPositions.map((position) => ({
+    id: getTileId(position),
+    position,
+    type: RangeTileType.Attack,
+  }));
+
+  // de-duplicate attack tiles by id
+  const dedupedAttackTiles = [...new Set(attackTiles.map((tile) => tile.id))]
+    .map((id) => attackTiles.find((tile) => tile.id === id))
+    .filter((tile): tile is RangeTile => typeof tile !== "undefined");
+
+  return dedupedAttackTiles;
+}
+
+/**
+ * Helper function that generates all valid attackable tiles for a given unit,
+ * at each of the provided positions. Considers bounds, traversability, and distance.
+ * De-dupes repeats, to handle cases where a unit has multiple bodyPositions.
+ *
+ * Note: considers the unit's attack range at each provided position. Intended
+ * use case is when evaluating a unit's attackable tiles AND its movement tiles.
+ * @param unit The unit we're examining.
+ * @param mapWidth
+ * @param mapHeight
+ * @param mapTiles
+ * @returns A RangeTile[] of all valid movement tiles for this unit.
+ */
+function getValidAttackableTilesForUnitAtPositions(
+  unit: Unit,
+  positions: Position[],
+  mapWidth: number,
+  mapHeight: number
+): RangeTile[] {
+  const attackDeltas = getAttackDeltasForUnit(unit);
+  const attackPositions = positions.flatMap((position) =>
+    applyDeltas(position, attackDeltas)
+  );
+  const validAttackPositions = attackPositions.filter((position) =>
+    isValidAttackableTile(position, mapWidth, mapHeight)
+  );
+  const attackTiles = validAttackPositions.map((position) => ({
+    id: getTileId(position),
+    position,
+    type: RangeTileType.Attack,
+  }));
+
+  // de-duplicate attack tiles by id
+  const dedupedAttackTiles = [...new Set(attackTiles.map((tile) => tile.id))]
+    .map((id) => attackTiles.find((tile) => tile.id === id))
+    .filter((tile): tile is RangeTile => typeof tile !== "undefined");
+
+  return dedupedAttackTiles;
+}
+
 function applyDeltas(position: Position, deltas: Position[]): Position[] {
   return deltas.map((delta) => addPositions(position, delta));
 }
 
-function isValid(
+function isValidDestinationTile(
   unit: Unit,
   delta: Position,
   mapWidth: number,
@@ -322,6 +444,14 @@ function isValid(
       isTraversible(prospectiveBodyPosition, mapTiles)
     );
   });
+}
+
+function isValidAttackableTile(
+  position: Position,
+  mapWidth: number,
+  mapHeight: number
+) {
+  return isWithinBounds(position, mapWidth, mapHeight);
 }
 
 function isWithinBounds(
