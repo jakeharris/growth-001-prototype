@@ -22,6 +22,7 @@ import {
   selectMovingUnitId,
   selectMovementDelta,
   selectSelectedUnitId,
+  selectAvailableActions,
 } from "../state/reducers/initial-scene";
 import {
   ActionMenuActions,
@@ -143,6 +144,12 @@ export class InitialScene extends Phaser.Scene {
       );
       this.movingUnitPendingPositionComponent =
         new UnitPendingPositionComponent(this.store, this, movingUnit);
+
+      this.store.dispatch(
+        ActionMenuActions.createActionMenu({
+          actionCount: selectAvailableActions(state).length,
+        })
+      );
       this.actionMenuComponent = new ActionMenuComponent(this.store, this);
 
       this.components.push(this.actionMenuComponent);

@@ -29,3 +29,12 @@ export function createTile(
 export function getTileId(position: Position): string {
   return `tile-${position.x}-${position.y}`;
 }
+
+/**
+ * @todo Remove this, we shouldn't be reconstructing this --
+ * we should just pass this information along if we need it.
+ */
+export function getPositionFromTileId(tileId: string): Position {
+  const [x, y] = tileId.split("-").slice(1);
+  return { x: parseInt(x, 10), y: parseInt(y, 10) };
+}

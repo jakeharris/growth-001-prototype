@@ -11,6 +11,7 @@ import {
   haveSamePosition,
   subtractPositions,
 } from "../../../models";
+import { ActionMenuOptions } from "../../../models/action-menu-options";
 
 export { ActionMenuActions } from "./action-menu.state";
 export { ControlActions } from "./control.state";
@@ -114,6 +115,10 @@ export const selectIsHoveringUnit = createSelector(
 /**
  * @todo Should we just determine the selected unit's movement range?
  * Or should we calculate them all at once and return user viewmodels?
+ *
+ * Either way, this should get renamed to better match what it does --
+ * returns all the tiles that are within the unit's range and in what
+ * kind of range they are.
  */
 export const selectSelectedUnitMovementTileIds = createSelector(
   selectSelectedUnit,
@@ -205,6 +210,14 @@ export const selectMovingUnitPendingPosition = createSelector(
   selectMovingUnit,
   (unit) => (unit ? unit.pendingPosition : undefined)
 );
+/**
+ * @todo Should we just determine the moving unit's movement range?
+ * Or should we calculate them all at once and return user viewmodels?
+ *
+ * Either way, this should get renamed to better match what it does --
+ * returns all the tiles that are within the unit's range and in what
+ * kind of range they are.
+ */
 export const selectMovingUnitMovementTileIds = createSelector(
   selectMovingUnit,
   selectMapWidth,
@@ -217,6 +230,37 @@ export const selectPreviousUnitPosition = createSelector(
   selectMovingUnit,
   (movingUnit) => (movingUnit ? movingUnit.position : null)
 );
+/**
+ * @todo Note: This does not de-duplicate units.
+ */
+export const selectAttackableTargetsNearMovingUnit = createSelector(
+  selectMovingUnit,
+  selectMovingUnitMovementTileIds,
+  selectUnits,
+  (movingUnit, tilesInRange, units) => {
+    if (!movingUnit) return [];
+
+    const unitsWithinRange = tilesInRange.flatMap((tile) => {
+      const nonMovingUnitsOnTile = units.filter(
+        (unit) =>
+          unit.id !== movingUnit.id &&
+          unit.team !== movingUnit.team &&
+          getAbsoluteBodyPositions(unit).some((pos) =>
+            haveSamePosition(pos, tile.position)
+          )
+      );
+
+      return nonMovingUnitsOnTile;
+    });
+
+    return unitsWithinRange;
+  }
+);
+
+export const selectIsMovingUnitNearAttackableTarget = createSelector(
+  selectAttackableTargetsNearMovingUnit,
+  (attackableTargets) => attackableTargets.length > 0
+);
 
 /**
  * Action Menu
@@ -227,10 +271,20 @@ export const selectActionMenuCursorIndex = createSelector(
   ActionMenuState.selectCursorIndex
 );
 
+/**
+ * Careful -- this is all viewstate, not state from action-menu.state.ts.
+ *
+ * Needs to determine whether we can Attack.
+ * Always includes the Wait action.
+ */
 export const selectAvailableActions = createSelector(
-  selectActionMenuState,
-  ActionMenuState.selectActions
+  selectIsMovingUnitNearAttackableTarget,
+  (hasAttackables) => [
+    ...(hasAttackables ? [ActionMenuOptions.Attack] : []),
+    ActionMenuOptions.Wait,
+  ]
 );
+
 export const selectActionMenuWidth = createSelector(
   selectAvailableActions,
   () => 3 // @todo: determine this dynamically

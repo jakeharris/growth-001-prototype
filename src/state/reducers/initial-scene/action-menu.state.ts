@@ -3,12 +3,12 @@ import { ActionMenuOptions } from "../../../models/action-menu-options";
 
 export interface State {
   cursorIndex: number;
-  actions: ActionMenuOptions[]; // @todo: populate from something
+  actionCount: number;
 }
 
 export const initialState: State = {
   cursorIndex: 0,
-  actions: [ActionMenuOptions.Wait],
+  actionCount: 1,
 };
 
 const slice = createSlice({
@@ -16,16 +16,24 @@ const slice = createSlice({
   initialState,
   reducers: {
     preload: () => initialState,
+    createActionMenu: (
+      state,
+      action: PayloadAction<{ actionCount: number }>
+    ) => ({
+      ...state,
+      cursorIndex: 0,
+      actionCount: action.payload.actionCount,
+    }),
     moveCursorDown: (state, action: Action) => ({
       ...state,
-      cursorIndex: (state.cursorIndex + 1) % state.actions.length,
+      cursorIndex: (state.cursorIndex + 1) % state.actionCount,
     }),
     moveCursorUp: (state, action: Action) => ({
       ...state,
       cursorIndex:
         (state.cursorIndex > 0
           ? state.cursorIndex - 1
-          : state.actions.length - 1) % state.actions.length,
+          : state.actionCount - 1) % state.actionCount,
     }),
     selectOption: (state, action: PayloadAction<ActionMenuOptions>) => state,
   },
@@ -33,4 +41,3 @@ const slice = createSlice({
 
 export const { actions: ActionMenuActions, reducer } = slice;
 export const selectCursorIndex = (state: State) => state.cursorIndex;
-export const selectActions = (state: State) => state.actions;

@@ -1,6 +1,9 @@
 import { Store } from "@reduxjs/toolkit";
 import { Depth, TILE_HEIGHT, TILE_WIDTH } from "../../models";
-import { getActionName } from "../../models/action-menu-options";
+import {
+  ActionMenuOptions,
+  getActionName,
+} from "../../models/action-menu-options";
 import {
   selectActionMenuPosition,
   selectActionMenuWidth,

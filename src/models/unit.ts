@@ -1,6 +1,6 @@
 import { Dictionary } from "@reduxjs/toolkit";
 import { addPositions, Position } from ".";
-import { Tile, getTileId } from "./tile";
+import { Tile, getTileId, getPositionFromTileId } from "./tile";
 
 export interface Unit {
   id: string;
@@ -161,6 +161,7 @@ export function createRandomInitialUnits(
 
 type RangeTile = {
   id: string;
+  position: Position;
   isMovementTile: boolean;
 };
 
@@ -221,6 +222,7 @@ export function getUnitRangeTileIds(
 
   const displayRangeTileIds = dedupedDestinationTileIds.map((id) => ({
     id,
+    position: getPositionFromTileId(id),
     isMovementTile: destinationTileIds.includes(id),
   }));
 
