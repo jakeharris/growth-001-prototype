@@ -1,7 +1,6 @@
 import { Store } from "@reduxjs/toolkit";
 import {
   Depth,
-  getUnitRangeTileIds as getUnitRangeTiles,
   RangeTileType,
   TILE_HEIGHT,
   TILE_WIDTH,
@@ -10,8 +9,7 @@ import {
 import {
   selectMapTilesEntities,
   State,
-  selectMapWidth,
-  selectMapHeight,
+  selectRangeTiles,
 } from "../../state/reducers/initial-scene";
 
 export class UnitRangeComponent extends Phaser.GameObjects.Container {
@@ -24,11 +22,8 @@ export class UnitRangeComponent extends Phaser.GameObjects.Container {
 
     const state = this.store.getState();
 
-    const mapWidth = selectMapWidth(state);
-    const mapHeight = selectMapHeight(state);
     const mapTiles = selectMapTilesEntities(state);
-
-    const rangeTiles = getUnitRangeTiles(unit, mapWidth, mapHeight, mapTiles);
+    const rangeTiles = selectRangeTiles(state);
 
     rangeTiles.forEach((rangeTile) => {
       const tile = mapTiles[rangeTile.id];

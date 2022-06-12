@@ -178,7 +178,7 @@ export type RangeTile = {
  * @param unit The unit to get the destination tiles for
  * @returns an array of the ids of all tiles that are within the unit's range
  */
-export function getUnitRangeTileIds(
+export function getAllUnitRangeTiles(
   unit: Unit,
   mapWidth: number,
   mapHeight: number,
@@ -186,7 +186,6 @@ export function getUnitRangeTileIds(
 ): RangeTile[] {
   /**
    * @todo, probably -- optimize this
-   * @todo Add check for whether any bodyPosition would collide with another unit
    */
 
   /**
@@ -232,6 +231,22 @@ export function getUnitRangeTileIds(
   const tilesToDisplay = [...validMovementTiles, ...attackableTilesToDisplay];
 
   return tilesToDisplay;
+}
+
+export function getUnitMovementRangeTiles(
+  unit: Unit,
+  mapWidth: number,
+  mapHeight: number,
+  mapTiles: Dictionary<Tile>
+): RangeTile[] {
+  const validMovementTiles = getValidMovementTilesForUnit(
+    unit,
+    mapWidth,
+    mapHeight,
+    mapTiles
+  );
+
+  return validMovementTiles;
 }
 
 /**
@@ -280,6 +295,8 @@ function getMovementDeltasForUnit(unit: Unit): Position[] {
 }
 
 /**
+ * @todo Add check for whether any bodyPosition would collide with another unit
+ *
  * Helper function that generates all possible movement tiles for a given unit.
  * Considers bounds, traversability, and distance. De-dupes repeats, to handle
  * cases where a unit has multiple bodyPositions.
@@ -289,6 +306,7 @@ function getMovementDeltasForUnit(unit: Unit): Position[] {
  * @param mapTiles
  * @returns A RangeTile[] of all valid movement tiles for this unit.
  */
+
 function getValidMovementTilesForUnit(
   unit: Unit,
   mapWidth: number,
@@ -348,42 +366,21 @@ function getAttackDeltasForUnit(unit: Unit): Position[] {
   return allAttackDeltas;
 }
 
-/**
- * Helper function that generates all valid attackable tiles for a given unit.
- * Considers bounds, traversability, and distance. De-dupes repeats, to handle
- * cases where a unit has multiple bodyPositions.
- *
- * Note: only considers the unit's current position.
- * @param unit The unit we're examining.
- * @param mapWidth
- * @param mapHeight
- * @param mapTiles
- * @returns A RangeTile[] of all valid attackable tiles for this unit at its current position.
- */
-function getValidAttackableTilesForUnit(
+export function getUnitAttackRangeTilesFromPendingPosition(
   unit: Unit,
   mapWidth: number,
   mapHeight: number
 ): RangeTile[] {
-  const attackDeltas = getAttackDeltasForUnit(unit);
-  const attackPositions = attackDeltas.map((delta) =>
-    addPositions(unit.position, delta)
-  );
-  const validAttackPositions = attackPositions.filter((position) =>
-    isValidAttackableTile(position, mapWidth, mapHeight)
-  );
-  const attackTiles = validAttackPositions.map((position) => ({
-    id: getTileId(position),
-    position,
-    type: RangeTileType.Attack,
-  }));
+  if (!unit.pendingPosition) throw new Error("Unit has no pending position");
 
-  // de-duplicate attack tiles by id
-  const dedupedAttackTiles = [...new Set(attackTiles.map((tile) => tile.id))]
-    .map((id) => attackTiles.find((tile) => tile.id === id))
-    .filter((tile): tile is RangeTile => typeof tile !== "undefined");
+  const attackTiles = getValidAttackableTilesForUnitAtPositions(
+    unit,
+    [unit.pendingPosition],
+    mapWidth,
+    mapHeight
+  );
 
-  return dedupedAttackTiles;
+  return attackTiles;
 }
 
 /**

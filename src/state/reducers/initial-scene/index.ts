@@ -6,10 +6,12 @@ import * as ActionMenuState from "./action-menu.state";
 import {
   getAbsoluteBodyPositions,
   getDestinationPositions,
-  getUnitRangeTileIds,
+  getAllUnitRangeTiles,
   getTileId,
   haveSamePosition,
   subtractPositions,
+  getUnitAttackRangeTilesFromPendingPosition,
+  getUnitMovementRangeTiles,
 } from "../../../models";
 import { ActionMenuOptions } from "../../../models/action-menu-options";
 
@@ -86,13 +88,13 @@ export const selectHoveredUnit = createSelector(
       )
     )
 );
-export const selectHoveredUnitMovementTileIds = createSelector(
+export const selectHoveredUnitRangeTiles = createSelector(
   selectHoveredUnit,
   selectMapWidth,
   selectMapHeight,
   selectMapTilesEntities,
   (unit, width, height, mapTiles) =>
-    unit ? getUnitRangeTileIds(unit, width, height, mapTiles) : []
+    unit ? getAllUnitRangeTiles(unit, width, height, mapTiles) : []
 );
 export const selectSelectedUnitId = createSelector(
   selectControlState,
@@ -120,13 +122,13 @@ export const selectIsHoveringUnit = createSelector(
  * returns all the tiles that are within the unit's range and in what
  * kind of range they are.
  */
-export const selectSelectedUnitMovementTileIds = createSelector(
+export const selectSelectedUnitRangeTiles = createSelector(
   selectSelectedUnit,
   selectMapWidth,
   selectMapHeight,
   selectMapTilesEntities,
   (unit, width, height, mapTiles) =>
-    unit ? getUnitRangeTileIds(unit, width, height, mapTiles) : []
+    unit ? getUnitMovementRangeTiles(unit, width, height, mapTiles) : []
 );
 export const selectIsSelectingUnit = createSelector(
   selectControlState,
@@ -218,14 +220,45 @@ export const selectMovingUnitPendingPosition = createSelector(
  * returns all the tiles that are within the unit's range and in what
  * kind of range they are.
  */
-export const selectMovingUnitMovementTileIds = createSelector(
+export const selectMovingUnitRangeTiles = createSelector(
   selectMovingUnit,
   selectMapWidth,
   selectMapHeight,
-  selectMapTilesEntities,
-  (unit, width, height, mapTiles) =>
-    unit ? getUnitRangeTileIds(unit, width, height, mapTiles) : []
+  (unit, width, height) =>
+    unit ? getUnitAttackRangeTilesFromPendingPosition(unit, width, height) : []
 );
+
+export const selectRangeTiles = createSelector(
+  selectIsHoveringUnit,
+  selectHoveredUnitRangeTiles,
+  selectIsSelectingUnit,
+  selectSelectedUnitRangeTiles,
+  selectIsMoving,
+  selectMovingUnitRangeTiles,
+  (
+    isHoveringUnit,
+    hoveredUnitRangeTiles,
+    isSelectingUnit,
+    selectedUnitRangeTiles,
+    isMoving,
+    movingUnitRangeTiles
+  ) => {
+    if (isHoveringUnit) {
+      return hoveredUnitRangeTiles;
+    }
+
+    if (isSelectingUnit) {
+      return selectedUnitRangeTiles;
+    }
+
+    if (isMoving) {
+      return movingUnitRangeTiles;
+    }
+
+    return [];
+  }
+);
+
 export const selectPreviousUnitPosition = createSelector(
   selectMovingUnit,
   (movingUnit) => (movingUnit ? movingUnit.position : null)
@@ -235,7 +268,7 @@ export const selectPreviousUnitPosition = createSelector(
  */
 export const selectAttackableTargetsNearMovingUnit = createSelector(
   selectMovingUnit,
-  selectMovingUnitMovementTileIds,
+  selectMovingUnitRangeTiles,
   selectUnits,
   (movingUnit, tilesInRange, units) => {
     if (!movingUnit) return [];
